@@ -1,8 +1,8 @@
 # EventBoost-Pro
 
-EventBoost-Pro is a **full-stack event management and marketing platform** designed to help organizers manage, promote, and sell tickets for their events. The project uses **React** for the frontend, **Node.js/Express** for the backend, and **MongoDB Atlas** as the database.  
+EventBoost-Pro is a **full-stack event management and marketing platform** designed to help organizers **create, manage, promote, and sell tickets** for their events. The project uses **React** for the frontend, **Node.js/Express** for the backend, and **MongoDB Atlas** as the database.
 
-The platform includes features such as **Google Authentication**, **JWT login**, **forgot password**, **event reminders via email**, and **payment integration** for event tickets.
+Key features include **Google Authentication**, **JWT login**, **forgot password**, **email reminders for events**, and **payment integration** for tickets.
 
 ---
 
@@ -12,11 +12,11 @@ The platform includes features such as **Google Authentication**, **JWT login**,
 - Sign up / Login with Email and Password
 - Login with Google (OAuth 2.0)
 - JWT-based authentication for secure sessions
-- Forgot Password functionality with email reset
+- Forgot Password functionality via email
 
 ### Event Management
 - Create, Update, and Delete events (Organizer/Admin)
-- Event details include: name, date, time, description, and ticket info
+- Event details: name, date, time, description, and ticket info
 - Organizer dashboard to manage events
 
 ### Event Marketing
@@ -47,6 +47,7 @@ The platform includes features such as **Google Authentication**, **JWT login**,
 ```bash
 git clone <your-github-repo-url>
 cd eventboost-pro
+
 
 Backend Setup
 cd backend
