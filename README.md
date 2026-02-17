@@ -61,7 +61,7 @@ Server runs at http://localhost:5000
 
 Nodemon automatically reloads on code changes
 
-3️⃣ Frontend Setup
+Frontend Setup
 cd ../frontend
 npm install
 
