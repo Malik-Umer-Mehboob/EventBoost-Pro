@@ -57,3 +57,25 @@
     --chart-5: 340 75% 55%
   }
 }
+
+@layer utilities {
+  .glass {
+    @apply bg-white/70 backdrop-blur-md border border-white/20 shadow-xl;
+  }
+  
+  .glass-dark {
+    @apply bg-black/50 backdrop-blur-md border border-white/10 shadow-2xl;
+  }
+
+  .gradient-primary {
+    @apply bg-gradient-to-r from-indigo-600 via-purple-600 to-rose-600;
+  }
+
+  .gradient-hover {
+    @apply hover:from-indigo-700 hover:via-purple-700 hover:to-rose-700 transition-all duration-300;
+  }
+  
+  .text-gradient {
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-indigo-600 to-rose-600;
+  }
+}

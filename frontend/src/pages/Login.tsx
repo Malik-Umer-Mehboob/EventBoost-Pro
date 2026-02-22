@@ -5,6 +5,7 @@ import api from '../api/axios';
 import { Eye, EyeOff } from 'lucide-react';
 import { toast } from 'sonner';
 import ThreeBackground from '../components/ThreeBackground';
+import GoogleButton from '../components/GoogleButton';
 
 const Login = () => {
   const [email, setEmail] = useState('');
@@ -60,53 +61,57 @@ const Login = () => {
   return (
     <>
     <ThreeBackground />
-    <div className="flex justify-center items-center h-screen bg-transparent">
-      <div className="bg-white p-8 rounded shadow-md w-96">
-        <h2 className="text-2xl font-bold mb-6 text-center">Login</h2>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <input
-            type="email"
-            placeholder="Email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            className="w-full p-2 border rounded"
-            required
-          />
+    <div className="flex justify-center items-center min-h-screen bg-transparent p-4">
+      <div className="bg-white/10 backdrop-blur-xl border border-white/20 p-8 rounded-2xl shadow-2xl w-full max-w-md transform transition-all duration-300">
+        <h2 className="text-3xl font-extrabold mb-8 text-center text-white tracking-tight">Welcome Back</h2>
+        <form onSubmit={handleSubmit} className="space-y-6">
+          <div>
+            <input
+              type="email"
+              placeholder="Email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="w-full p-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
+              required
+            />
+          </div>
           <div className="relative">
             <input
               type={showPassword ? "text" : "password"}
               placeholder="Password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full p-2 border rounded pr-10"
+              className="w-full p-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all pr-12"
               required
             />
             <button
               type="button"
               onClick={() => setShowPassword(!showPassword)}
-              className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700"
+              className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white transition-colors"
             >
               {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
             </button>
           </div>
           <div className="text-right">
-            <a href="/forgot-password" className="text-sm text-blue-500 hover:underline">Forgot Password?</a>
+            <a href="/forgot-password" className="text-sm text-blue-400 hover:text-blue-300 transition-colors">Forgot Password?</a>
           </div>
-          <button type="submit" className="w-full bg-blue-500 text-white p-2 rounded hover:bg-blue-600">
-            Login
+          <button type="submit" className="w-full bg-blue-600 text-white p-3 rounded-xl font-semibold hover:bg-blue-700 active:scale-[0.98] transition-all shadow-lg shadow-blue-600/20">
+            Sign In
           </button>
         </form>
-        <div className="mt-4 text-center">
-            <p>Or</p>
-            <button 
-                onClick={handleGoogleLogin}
-                className="w-full bg-red-500 text-white p-2 rounded hover:bg-red-600 mt-2"
-            >
-                Login with Google
-            </button>
+        <div className="mt-8">
+            <div className="relative flex items-center mb-6">
+                <div className="flex-grow border-t border-white/10"></div>
+                <span className="flex-shrink mx-4 text-gray-400 text-sm">Or continue with</span>
+                <div className="flex-grow border-t border-white/10"></div>
+            </div>
+            <GoogleButton onClick={handleGoogleLogin} text="Google" />
         </div>
-        <div className="mt-4 text-center">
-            <a href="/register" className="text-blue-500 hover:underline">Don't have an account? Register</a>
+        <div className="mt-8 text-center">
+            <p className="text-gray-400">
+                Don't have an account?{' '}
+                <a href="/register" className="text-blue-400 font-semibold hover:text-blue-300 transition-colors underline-offset-4 hover:underline">Register</a>
+            </p>
         </div>
         </div>
     </div>

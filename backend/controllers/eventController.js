@@ -1,22 +1,55 @@
 const Event = require('../models/Event');
 
+const CATEGORIES = [
+  'Conference',
+  'Workshop',
+  'Seminar',
+  'Party',
+  'Concert',
+  'Exhibition',
+  'Sports',
+  'Others',
+];
+
 // @desc    Create a new event
 // @route   POST /api/events
 // @access  Private (Organizer only)
 const createEvent = async (req, res) => {
   try {
-    const { title, description, date, location } = req.body;
+    const { 
+      title, 
+      description, 
+      date, 
+      location, 
+      category, 
+      ticketPrice, 
+      ticketQuantity, 
+      bannerImage, 
+      isFeatured 
+    } = req.body;
+
+    // Validate category
+    if (!CATEGORIES.includes(category)) {
+      return res.status(400).json({ message: 'Invalid category' });
+    }
 
     const event = await Event.create({
       title,
       description,
       date,
       location,
+      category,
+      ticketPrice,
+      ticketQuantity,
+      bannerImage,
+      isFeatured,
+      organizer: req.user.id,
       createdBy: req.user.id,
     });
 
     res.status(201).json(event);
   } catch (error) {
+    console.error('Error in createEvent:', error);
     res.status(400).json({ message: error.message });
   }
 };
@@ -26,9 +59,10 @@ const createEvent = async (req, res) => {
 // @access  Private (Admin only)
 const getAllEvents = async (req, res) => {
   try {
-    const events = await Event.find({}).populate('createdBy', 'name email');
+    const events = await Event.find({}).populate('organizer createdBy', 'name email');
     res.json(events);
   } catch (error) {
+    console.error('Error in getAllEvents:', error);
     res.status(500).json({ message: 'Server error' });
   }
 };
@@ -38,9 +72,12 @@ const getAllEvents = async (req, res) => {
 // @access  Private (Organizer only)
 const getMyEvents = async (req, res) => {
   try {
-    const events = await Event.find({ createdBy: req.user.id });
+    const events = await Event.find({ 
+      $or: [{ organizer: req.user.id }, { createdBy: req.user.id }] 
+    }).populate('organizer createdBy', 'name email');
     res.json(events);
   } catch (error) {
+    console.error('Error in getMyEvents:', error);
     res.status(500).json({ message: 'Server error' });
   }
 };
@@ -50,9 +87,10 @@ const getMyEvents = async (req, res) => {
 // @access  Private
 const getPublicEvents = async (req, res) => {
   try {
-    const events = await Event.find({}).populate('createdBy', 'name');
+    const events = await Event.find({}).populate('organizer createdBy', 'name');
     res.json(events);
   } catch (error) {
+    console.error('Error in getPublicEvents:', error);
     res.status(500).json({ message: 'Server error' });
   }
 };
@@ -62,6 +100,13 @@ const getPublicEvents = async (req, res) => {
 // @access  Private (Organizer/Admin)
 const updateEvent = async (req, res) => {
   try {
+    const { category } = req.body;
+
+    // Validate category if provided
+    if (category && !CATEGORIES.includes(category)) {
+      return res.status(400).json({ message: 'Invalid category' });
+    }
+
     const event = await Event.findById(req.params.id);
 
     if (!event) {
@@ -69,17 +114,23 @@ const updateEvent = async (req, res) => {
     }
 
     // Check ownership or admin status
-    if (event.createdBy.toString() !== req.user.id && req.user.role !== 'admin') {
+    // Safe check: Admins can update any event. Organizers can update only theirs.
+    const organizerId = event.organizer || event.createdBy;
+    const isOwner = organizerId && organizerId.toString() === req.user.id;
+    const isAdmin = req.user.role === 'admin';
+
+    if (!isOwner && !isAdmin) {
       return res.status(403).json({ message: 'Not authorized to update this event' });
     }
 
     const updatedEvent = await Event.findByIdAndUpdate(req.params.id, req.body, {
-      new: true,
+      returnDocument: 'after',
       runValidators: true,
     });
 
     res.json(updatedEvent);
   } catch (error) {
+    console.error('Error in updateEvent:', error);
     res.status(400).json({ message: error.message });
   }
 };
@@ -96,13 +147,19 @@ const deleteEvent = async (req, res) => {
     }
 
     // Check ownership or admin status
-    if (event.createdBy.toString() !== req.user.id && req.user.role !== 'admin') {
+    // Safe check: Admins can delete any event. Organizers can delete only theirs.
+    const organizerId = event.organizer || event.createdBy;
+    const isOwner = organizerId && organizerId.toString() === req.user.id;
+    const isAdmin = req.user.role === 'admin';
+
+    if (!isOwner && !isAdmin) {
       return res.status(403).json({ message: 'Not authorized to delete this event' });
     }
 
     await event.deleteOne();
     res.json({ message: 'Event removed' });
   } catch (error) {
+    console.error('Error in deleteEvent:', error);
     res.status(500).json({ message: 'Server error' });
   }
 };
@@ -128,8 +185,34 @@ const registerForEvent = async (req, res) => {
 
     res.json({ message: 'Successfully registered' });
   } catch (error) {
+    console.error('Error in registerForEvent:', error);
     res.status(500).json({ message: 'Server error' });
   }
+};
+
+// @desc    Get single event
+// @route   GET /api/events/:id
+// @access  Private
+const getEventById = async (req, res) => {
+  try {
+    const event = await Event.findById(req.params.id).populate('organizer createdBy', 'name email');
+
+    if (!event) {
+      return res.status(404).json({ message: 'Event not found' });
+    }
+
+    res.json(event);
+  } catch (error) {
+    console.error('Error in getEventById:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+// @desc    Get event categories
+// @route   GET /api/events/categories
+// @access  Public
+const getCategories = (req, res) => {
+  res.json(CATEGORIES);
 };
 
 module.exports = {
@@ -140,4 +223,6 @@ module.exports = {
   updateEvent,
   deleteEvent,
   registerForEvent,
+  getEventById,
+  getCategories,
 };

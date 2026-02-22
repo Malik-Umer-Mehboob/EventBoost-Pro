@@ -19,6 +19,39 @@ const eventSchema = new mongoose.Schema(
       type: String,
       required: [true, 'Please add a location'],
     },
+    category: {
+      type: String,
+      required: [true, 'Please add a category'],
+    },
+    ticketPrice: {
+      type: Number,
+      required: [true, 'Please add a ticket price'],
+      default: 0,
+    },
+    ticketQuantity: {
+      type: Number,
+      required: [true, 'Please add ticket quantity'],
+    },
+    totalTickets: {
+      type: Number,
+    },
+    soldTickets: {
+      type: Number,
+      default: 0,
+    },
+    bannerImage: {
+      url: String,
+      public_id: String,
+    },
+    isFeatured: {
+      type: Boolean,
+      default: false,
+    },
+    organizer: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+      required: true,
+    },
     createdBy: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'User',

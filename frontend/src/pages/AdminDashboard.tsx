@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Eye, EyeOff } from 'lucide-react';
 import api from '../api/axios';
-import Navbar from '../components/Navbar';
 import { getAllEvents, deleteEvent, EventData } from '../api/eventApi';
 import EventCard from '../components/EventCard';
 import { toast } from 'sonner';
@@ -12,6 +12,7 @@ const AdminDashboard = () => {
   const [orgPassword, setOrgPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [events, setEvents] = useState<EventData[]>([]);
+  const navigate = useNavigate();
 
   const fetchEvents = async () => {
     try {
@@ -57,9 +58,11 @@ const AdminDashboard = () => {
     }
   };
 
+  const handleEditEvent = (event: EventData) => {
+    navigate(`/edit-event/${event._id}`);
+  };
+
   return (
-    <>
-      <Navbar />
       <div className="p-8 max-w-7xl mx-auto">
         <h1 className="text-3xl font-bold mb-8">Admin Dashboard</h1>
         
@@ -128,6 +131,7 @@ const AdminDashboard = () => {
                                 key={event._id}
                                 event={event}
                                 onDelete={handleDeleteEvent}
+                                onEdit={handleEditEvent}
                                 isAdmin={true}
                             />
                         ))}
@@ -136,7 +140,6 @@ const AdminDashboard = () => {
             </div>
         </div>
       </div>
-    </>
   );
 };
 

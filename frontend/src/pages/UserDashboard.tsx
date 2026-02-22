@@ -1,71 +1,105 @@
 import React, { useState, useEffect } from 'react';
-import Navbar from '../components/Navbar';
-import { getPublicEvents, registerForEvent, EventData } from '../api/eventApi';
-import EventCard from '../components/EventCard';
+import { Ticket, Calendar, Search, Loader2 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
-import { toast } from 'sonner';
+import axios from '../api/axios';
+import TicketCard from '../components/dashboard/TicketCard';
 
-const UserDashboard = () => {
-  const [events, setEvents] = useState<EventData[]>([]);
+const UserDashboard: React.FC = () => {
   const { user } = useAuth();
+  const [bookings, setBookings] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  const fetchEvents = async () => {
+  const fetchTickets = async (showLoading = true) => {
+    if (showLoading) setLoading(true);
     try {
-      const data = await getPublicEvents();
-      setEvents(data);
+      const { data } = await axios.get('/bookings/my-tickets');
+      setBookings(data);
     } catch (error) {
-       // Handled by global interceptor
+      console.error('Failed to fetch tickets');
+    } finally {
+      if (showLoading) setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchEvents();
+    fetchTickets();
   }, []);
 
-  const handleRegister = async (id: string) => {
-    try {
-      await registerForEvent(id);
-      toast.success('Registration Successful! 🔥', {
-          description: 'You are now on the attendee list.',
-      });
-      fetchEvents();
-    } catch (error: any) {
-      // Handled by global interceptor
+  // Polling for pending payments
+  useEffect(() => {
+    const hasPending = bookings.some((b: any) => b.paymentStatus === 'pending');
+    
+    if (hasPending) {
+        const interval = setInterval(() => {
+            console.log('Refreshing bookings to check for payment confirmation...');
+            fetchTickets(false); // Fetch silently
+        }, 3000);
+        
+        return () => clearInterval(interval);
     }
-  };
+  }, [bookings]);
 
   return (
-    <>
-      <Navbar />
-      <div className="p-8 max-w-6xl mx-auto">
-        <div className="flex justify-between items-center mb-10">
-            <div>
-                <h1 className="text-3xl font-bold text-gray-900">Discover Events</h1>
-                <p className="text-gray-500 mt-2">Find and register for upcoming events around you.</p>
+    <div className="min-h-screen bg-slate-50 pt-24 pb-12 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-6xl mx-auto">
+        {/* Profile Header */}
+        <div className="glass p-8 rounded-3xl mb-8 flex flex-col md:flex-row items-center gap-6 justify-between">
+            <div className="flex items-center gap-6">
+                <div className="w-20 h-20 rounded-full bg-gradient-to-br from-indigo-500 to-rose-500 flex items-center justify-center text-white text-3xl font-black shadow-lg">
+                    {user?.name?.charAt(0)}
+                </div>
+                <div>
+                    <h1 className="text-3xl font-black text-gray-900 leading-tight">Welcome back, {user?.name}!</h1>
+                    <p className="text-gray-500 font-medium">Manage your tickets and explore upcoming events.</p>
+                </div>
             </div>
-            <div className="bg-blue-50 px-4 py-2 rounded-lg border border-blue-100">
-                <span className="text-blue-700 font-medium">Hello, {user?.name}!</span>
+            <div className="flex gap-4">
+                <div className="text-center bg-white px-6 py-3 rounded-2xl shadow-sm border border-gray-100">
+                    <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest leading-none mb-1">My Tickets</p>
+                    <p className="text-xl font-black text-indigo-600">{bookings.length}</p>
+                </div>
             </div>
         </div>
 
-        {events.length === 0 ? (
-          <div className="bg-gray-50 border-2 border-dashed border-gray-200 rounded-2xl p-20 text-center">
-            <p className="text-gray-400 text-lg">No public events available at the moment.</p>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {events.map((event) => (
-              <EventCard
-                key={event._id}
-                event={event}
-                onRegister={handleRegister}
-                isRegistered={event.attendees?.includes(user?._id || '')}
-              />
-            ))}
-          </div>
-        )}
+        {/* Tickets Section */}
+        <div className="space-y-6">
+            <div className="flex items-center justify-between">
+                <h2 className="text-2xl font-black text-gray-900 flex items-center gap-2">
+                    <Ticket className="text-indigo-600 w-6 h-6" />
+                    My Purchased Tickets
+                </h2>
+                <div className="hidden sm:flex items-center gap-2 text-sm text-gray-500 font-medium">
+                    <Calendar className="w-4 h-4" />
+                    Showing latest bookings
+                </div>
+            </div>
+
+            {loading ? (
+                <div className="flex flex-col items-center justify-center py-24 gap-4">
+                    <Loader2 className="w-12 h-12 text-indigo-600 animate-spin" />
+                    <p className="text-gray-500 font-medium">Retrieving your tickets...</p>
+                </div>
+            ) : bookings.length === 0 ? (
+                <div className="text-center py-24 glass rounded-3xl border-2 border-dashed border-gray-200">
+                    <div className="bg-gray-100 inline-flex p-6 rounded-full mb-4">
+                        <Search className="w-12 h-12 text-gray-300" />
+                    </div>
+                    <h3 className="text-xl font-bold text-gray-800">No tickets found</h3>
+                    <p className="text-gray-500 mb-6 font-medium">You haven't purchased any tickets yet.</p>
+                    <button className="gradient-primary text-white px-8 py-3 rounded-xl font-bold hover:scale-105 transition-all">
+                        Browse Events
+                    </button>
+                </div>
+            ) : (
+                <div className="grid grid-cols-1 gap-6">
+                    {bookings.map((booking: any) => (
+                        <TicketCard key={booking._id} booking={booking} />
+                    ))}
+                </div>
+            )}
+        </div>
       </div>
-    </>
+    </div>
   );
 };
 

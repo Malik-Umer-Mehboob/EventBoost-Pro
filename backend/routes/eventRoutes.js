@@ -8,6 +8,8 @@ const {
   updateEvent,
   deleteEvent,
   registerForEvent,
+  getEventById,
+  getCategories,
 } = require('../controllers/eventController');
 const { protect, authorize } = require('../middleware/authMiddleware');
 
@@ -21,6 +23,8 @@ router.delete('/:id', protect, authorize('admin', 'organizer'), deleteEvent); //
 
 // User / Shared routes
 router.get('/public', protect, getPublicEvents);
+router.get('/categories', getCategories);
+router.get('/:id', protect, getEventById);
 router.put('/:id', protect, authorize('admin', 'organizer'), updateEvent);
 router.post('/:id/register', protect, authorize('user'), registerForEvent);
 

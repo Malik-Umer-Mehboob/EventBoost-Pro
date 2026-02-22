@@ -14,11 +14,17 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ allowedRoles }) => {
   }
 
   if (!user) {
-    return <Navigate to="/login" replace />;
+    return <Navigate to="/login" />;
   }
 
   if (allowedRoles && !allowedRoles.includes(user.role)) {
-    return <Navigate to="/dashboard" replace />; // Redirect to default dashboard if unauthorized
+    // Redirect to the user's specific dashboard instead of a generic /dashboard
+    const dashboardPath = 
+      user.role === 'admin' ? '/admin/dashboard' :
+      user.role === 'organizer' ? '/organizer-dashboard' :
+      '/user/dashboard';
+    
+    return <Navigate to={dashboardPath} replace />;
   }
 
   return <Outlet />;
