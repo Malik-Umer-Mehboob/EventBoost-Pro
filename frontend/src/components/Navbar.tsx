@@ -2,6 +2,7 @@ import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { LogOut, User, LayoutDashboard, Sparkles, Ticket, ArrowLeft } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import NotificationDropdown from './NotificationDropdown';
 import { toast } from 'sonner';
 import logo from '../assets/Logo_event.png';
 
@@ -89,6 +90,7 @@ const Navbar = () => {
                   {user.role}
                 </span>
               </div>
+              <NotificationDropdown />
               <div className="h-10 w-10 rounded-full bg-gradient-to-br from-indigo-100 to-purple-100 flex items-center justify-center border-2 border-white shadow-md">
                 <User className="w-5 h-5 text-indigo-600" />
               </div>

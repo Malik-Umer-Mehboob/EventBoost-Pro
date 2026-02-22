@@ -69,4 +69,8 @@ const eventSchema = new mongoose.Schema(
   }
 );
 
+// Analytics performance indexes
+eventSchema.index({ organizer: 1, date: -1 });
+eventSchema.index({ category: 1 });
+
 module.exports = mongoose.model('Event', eventSchema);

@@ -32,10 +32,20 @@ const bookingSchema = new mongoose.Schema(
     qrCode: {
       type: String, // Data URL for the QR code
     },
+    refundStatus: {
+      type: String,
+      enum: ['none', 'requested', 'completed'],
+      default: 'none',
+    },
   },
   {
     timestamps: true,
   }
 );
+
+// Analytics performance indexes
+bookingSchema.index({ event: 1, paymentStatus: 1 });
+bookingSchema.index({ user: 1, createdAt: -1 });
+bookingSchema.index({ createdAt: -1, paymentStatus: 1 });
 
 module.exports = mongoose.model('Booking', bookingSchema);

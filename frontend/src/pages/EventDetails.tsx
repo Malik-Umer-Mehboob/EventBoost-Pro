@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Calendar, MapPin, Users, ShieldCheck, ArrowLeft, Loader2, Share2, Facebook, Twitter, Linkedin } from 'lucide-react';
+import { Calendar, MapPin, Users, ShieldCheck, ArrowLeft, Loader2, Share2, Facebook, Twitter, Linkedin, Megaphone } from 'lucide-react';
 import { getEventById, EventData } from '../api/eventApi';
 import CheckoutButton from '../components/bookings/CheckoutButton';
+import AnnouncementModal from '../components/AnnouncementModal';
 import { useAuth } from '../context/AuthContext';
 import { toast } from 'sonner';
 
@@ -14,6 +15,7 @@ const EventDetails: React.FC = () => {
   const [event, setEvent] = useState<EventData | null>(null);
   const [loading, setLoading] = useState(true);
   const [quantity, setQuantity] = useState(1);
+  const [isAnnouncementOpen, setIsAnnouncementOpen] = useState(false);
   
   const isOwner = user?._id === (event?.organizer?._id || event?.createdBy?._id);
   const isAdmin = user?.role === 'admin';
@@ -103,7 +105,20 @@ const EventDetails: React.FC = () => {
                 )}
               </div>
 
-              <h1 className="text-4xl font-black text-gray-900">{event.title}</h1>
+              <div className="flex justify-between items-start gap-4">
+                <h1 className="text-4xl font-black text-gray-900 flex-1">{event.title}</h1>
+                {(isOwner || isAdmin) && (
+                  <motion.button
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={() => setIsAnnouncementOpen(true)}
+                    className="p-3 bg-indigo-600 text-white rounded-2xl shadow-xl hover:bg-indigo-700 transition-all flex items-center gap-2 font-bold text-sm whitespace-nowrap"
+                  >
+                    <Megaphone className="w-5 h-5" />
+                    <span className="hidden sm:inline">Send Announcement</span>
+                  </motion.button>
+                )}
+              </div>
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="flex items-center gap-4 p-4 rounded-2xl bg-slate-50 border border-slate-100">
@@ -228,6 +243,13 @@ const EventDetails: React.FC = () => {
           </div>
         </div>
       </div>
+
+      <AnnouncementModal
+        isOpen={isAnnouncementOpen}
+        onClose={() => setIsAnnouncementOpen(false)}
+        eventId={event._id!}
+        eventTitle={event.title}
+      />
     </div>
   );
 };

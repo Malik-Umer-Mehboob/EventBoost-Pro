@@ -14,6 +14,8 @@ import CreateEvent from './pages/CreateEvent';
 import EditEvent from './pages/EditEvent';
 import EventList from './pages/EventList';
 import EventDetails from './pages/EventDetails';
+import Transactions from './pages/Transactions';
+import AdminTransactions from './pages/AdminTransactions';
 
 import AuthLayout from './layouts/AuthLayout';
 import MainLayout from './layouts/MainLayout';
@@ -56,10 +58,12 @@ const App = () => {
 
             <Route element={<ProtectedRoute />}>
               <Route path="/profile" element={<UserDashboard />} />
+              <Route path="/profile/transactions" element={<Transactions />} />
             </Route>
 
             <Route element={<ProtectedRoute allowedRoles={['admin']} />}>
               <Route path="/admin/dashboard" element={<AdminDashboard />} />
+              <Route path="/admin/transactions" element={<AdminTransactions />} />
             </Route>
 
             <Route element={<ProtectedRoute allowedRoles={['organizer']} />}>

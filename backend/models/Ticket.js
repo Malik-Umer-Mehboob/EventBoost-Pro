@@ -28,6 +28,10 @@ const ticketSchema = new mongoose.Schema(
     qrCode: {
       type: String, // Data URL for the QR code
     },
+    isValid: {
+      type: Boolean,
+      default: true,
+    },
   },
   {
     timestamps: true,
