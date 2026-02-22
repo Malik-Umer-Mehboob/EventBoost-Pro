@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '../ui/dialog';
+import { Dialog, DialogContent } from '../ui/dialog';
 import { EventData } from '../../api/eventApi';
-import { Users, Calendar, MapPin, ShieldCheck } from 'lucide-react';
+import { Users, Calendar } from 'lucide-react';
 import CheckoutButton from './CheckoutButton';
 import { useAuth } from '../../context/AuthContext';
 

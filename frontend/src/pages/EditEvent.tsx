@@ -30,7 +30,7 @@ const EditEvent: React.FC = () => {
     fetchEvent();
   }, [id, navigate]);
 
-  const handleSubmit = async (data: Partial<EventData>) => {
+  const handleSubmit = async (data: FormData) => {
     setUpdating(true);
     try {
       if (id) {

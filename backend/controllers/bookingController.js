@@ -7,6 +7,7 @@ const nodemailer = require('nodemailer');
 const PDFDocument = require('pdfkit');
 const crypto = require('crypto');
 const { createNotification } = require('../services/notificationService');
+const { broadcastAttendeeCount } = require('../config/socket');
 
 const initiateBooking = async (req, res) => {
   try {
@@ -105,11 +106,12 @@ const stripeWebhook = async (req, res) => {
           metadata: session.metadata
         });
 
-        // Update event sold count
+        // Update event sold count and broadcast live attendee count
         const event = await Event.findByIdAndUpdate(eventId, { 
           $inc: { soldTickets: parseInt(quantity) } 
         }, { returnDocument: 'after' });
         console.log(`📈 Event "${event.title}" sold count updated: ${event.soldTickets}/${event.ticketQuantity}`);
+        broadcastAttendeeCount(eventId, event.soldTickets);
 
         // Create individual tickets
         console.log(`🎟 Creating ${quantity} tickets...`);

@@ -1,13 +1,14 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Eye, EyeOff, ShieldCheck, Users, Calendar, TrendingUp, DollarSign, Ticket, RefreshCw, Activity } from 'lucide-react';
+import { Eye, EyeOff, ShieldCheck, Users, Calendar, TrendingUp, DollarSign, Ticket, RefreshCw, Activity, Megaphone, Send } from 'lucide-react';
 import { motion } from 'framer-motion';
 import api from '../api/axios';
-
 import { toast } from 'sonner';
 import StatsCard from '../components/analytics/StatsCard';
 import RevenueChart from '../components/analytics/RevenueChart';
 import { format } from 'date-fns';
+import { useRealTime } from '../hooks/useRealTime';
+import Skeleton from '../components/common/Skeleton';
 
 interface DashboardStats {
   users: number;
@@ -43,10 +44,17 @@ const AdminDashboard = () => {
   const [monthlySales, setMonthlySales] = useState<MonthlySale[]>([]);
   const [loadingStats, setLoadingStats] = useState(true);
 
-  const navigate = useNavigate();
+  // Emergency Broadcast Form
+  const [broadcastTitle, setBroadcastTitle] = useState('');
+  const [broadcastMessage, setBroadcastMessage] = useState('');
+  const [isBroadcasting, setIsBroadcasting] = useState(false);
 
-  const fetchDashboard = useCallback(async () => {
-    setLoadingStats(true);
+  const navigate = useNavigate();
+  const { socket } = useRealTime();
+
+  const fetchDashboard = useCallback(async (isSilent = false) => {
+    if (typeof isSilent !== 'boolean') isSilent = false;
+    if (!isSilent) setLoadingStats(true);
     try {
       const { data } = await api.get('/admin/dashboard');
       setStats(data.stats);
@@ -55,16 +63,50 @@ const AdminDashboard = () => {
     } catch {
       toast.error('Failed to load dashboard analytics');
     } finally {
-      setLoadingStats(false);
+      if (!isSilent) setLoadingStats(false);
     }
   }, []);
 
   useEffect(() => {
     fetchDashboard();
-    // 30-second polling
-    const interval = setInterval(fetchDashboard, 30000);
-    return () => clearInterval(interval);
   }, [fetchDashboard]);
+
+  // Real-time updates
+  useEffect(() => {
+    if (!socket) return;
+
+    const handleUpdate = () => {
+      fetchDashboard(true); // Silent refresh
+    };
+
+    socket.on('event:updated', handleUpdate);
+    socket.on('event:attendee_count', handleUpdate);
+
+    return () => {
+      socket.off('event:updated', handleUpdate);
+      socket.off('event:attendee_count', handleUpdate);
+    };
+  }, [socket, fetchDashboard]);
+
+  const handleBroadcast = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!broadcastTitle || !broadcastMessage) return;
+
+    setIsBroadcasting(true);
+    try {
+      await api.post('/admin/broadcast', {
+        title: broadcastTitle,
+        message: broadcastMessage
+      });
+      toast.success('Broadcast Sent!', { description: 'Platform-wide emergency alert has been sent.' });
+      setBroadcastTitle('');
+      setBroadcastMessage('');
+    } catch {
+      toast.error('Failed to send broadcast');
+    } finally {
+      setIsBroadcasting(false);
+    }
+  };
 
   const handleCreateOrganizer = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -95,7 +137,7 @@ const AdminDashboard = () => {
           </div>
           <div className="flex gap-3">
             <button
-              onClick={fetchDashboard}
+              onClick={() => fetchDashboard(false)}
               className="p-3 bg-white border border-gray-100 rounded-2xl text-gray-400 hover:text-indigo-600 hover:border-indigo-100 transition-all shadow-sm"
               title="Refresh Analytics"
             >
@@ -111,11 +153,68 @@ const AdminDashboard = () => {
           </div>
         </div>
 
+        {/* Emergency Broadcast Section */}
+        <div className="glass p-8 rounded-3xl mb-10 border-l-4 border-rose-500">
+          <div className="flex items-start gap-4 mb-6">
+            <div className="p-4 bg-rose-50 rounded-2xl">
+              <Megaphone className="w-8 h-8 text-rose-500" />
+            </div>
+            <div>
+              <h2 className="text-xl font-black text-gray-900">Emergency Broadcast</h2>
+              <p className="text-gray-500 text-sm">Send a platform-wide alert to all connected users instantly.</p>
+            </div>
+          </div>
+          
+          <form onSubmit={handleBroadcast} className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="md:col-span-1">
+              <input
+                type="text"
+                placeholder="Alert Title (e.g., Event Cancellation)"
+                value={broadcastTitle}
+                onChange={(e) => setBroadcastTitle(e.target.value)}
+                className="w-full px-5 py-4 rounded-2xl border border-gray-100 focus:border-rose-300 outline-none transition-all shadow-sm"
+                required
+              />
+            </div>
+            <div className="md:col-span-1">
+              <input
+                type="text"
+                placeholder="Message Content..."
+                value={broadcastMessage}
+                onChange={(e) => setBroadcastMessage(e.target.value)}
+                className="w-full px-5 py-4 rounded-2xl border border-gray-100 focus:border-rose-300 outline-none transition-all shadow-sm"
+                required
+              />
+            </div>
+            <div className="md:col-span-1">
+              <button
+                type="submit"
+                disabled={isBroadcasting}
+                className="w-full flex items-center justify-center gap-2 px-5 py-4 bg-rose-500 text-white rounded-2xl font-bold hover:bg-rose-600 transition-all shadow-lg shadow-rose-100 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isBroadcasting ? <RefreshCw className="w-5 h-5 animate-spin" /> : <Send className="w-5 h-5" />}
+                Send Broadcast
+              </button>
+            </div>
+          </form>
+        </div>
+
         {/* KPI Cards */}
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4 mb-10">
-          {kpiCards.map(card => (
-            <StatsCard key={card.label} {...card} />
-          ))}
+          {loadingStats 
+            ? Array(5).fill(0).map((_, i) => (
+                <div key={i} className="glass p-6 rounded-3xl space-y-4">
+                  <Skeleton width={48} height={48} />
+                  <div className="space-y-2">
+                    <Skeleton width="60%" height={12} />
+                    <Skeleton width="80%" height={24} />
+                  </div>
+                </div>
+              ))
+            : kpiCards.map(card => (
+                <StatsCard key={card.label} {...card} />
+              ))
+          }
         </div>
 
         {/* Charts + Activity Feed */}
@@ -126,13 +225,17 @@ const AdminDashboard = () => {
               <TrendingUp className="w-5 h-5 text-indigo-600" />
               Monthly Revenue Trend
             </h2>
-            <RevenueChart
-              data={monthlySales}
-              lines={[
-                { key: 'revenue', label: 'Revenue ($)', color: '#6366f1' },
-                { key: 'bookings', label: 'Bookings', color: '#10b981' },
-              ]}
-            />
+            {loadingStats ? (
+              <Skeleton width="100%" height={280} />
+            ) : (
+              <RevenueChart
+                data={monthlySales}
+                lines={[
+                  { key: 'revenue', label: 'Revenue ($)', color: '#6366f1' },
+                  { key: 'bookings', label: 'Bookings', color: '#10b981' },
+                ]}
+              />
+            )}
           </div>
 
           {/* Recent Activity */}
@@ -142,7 +245,17 @@ const AdminDashboard = () => {
               Recent Bookings
             </h2>
             {loadingStats ? (
-              <div className="flex-1 flex items-center justify-center text-gray-400 text-sm font-bold">Loading...</div>
+              <div className="space-y-4 flex-1">
+                {Array(4).fill(0).map((_, i) => (
+                  <div key={i} className="flex items-center gap-3">
+                    <Skeleton width={32} height={32} circle />
+                    <div className="flex-1 space-y-1">
+                      <Skeleton width="40%" height={10} />
+                      <Skeleton width="70%" height={8} />
+                    </div>
+                  </div>
+                ))}
+              </div>
             ) : recentBookings.length === 0 ? (
               <div className="flex-1 flex items-center justify-center text-gray-400 text-sm font-bold">No recent activity</div>
             ) : (

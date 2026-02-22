@@ -6,6 +6,10 @@ interface User {
   email: string;
   role: 'admin' | 'organizer' | 'user';
   token: string;
+  profilePicture?: {
+    url: string;
+    public_id?: string;
+  };
 }
 
 interface AuthContextType {

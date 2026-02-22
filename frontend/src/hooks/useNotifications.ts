@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { io, Socket } from 'socket.io-client';
+import { useSocket } from '../context/SocketContext';
 import { useAuth } from '../context/AuthContext';
 import api from '../api/axios';
 import { toast } from 'sonner';
@@ -16,9 +16,9 @@ export interface Notification {
 
 export const useNotifications = () => {
   const { user } = useAuth();
+  const { socket } = useSocket();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
-  const [socket, setSocket] = useState<Socket | null>(null);
 
   const fetchNotifications = useCallback(async () => {
     if (!user) return;
@@ -32,29 +32,28 @@ export const useNotifications = () => {
   }, [user]);
 
   useEffect(() => {
-    if (!user) return;
+    if (user) {
+      fetchNotifications();
+    }
+  }, [user, fetchNotifications]);
 
-    fetchNotifications();
+  useEffect(() => {
+    if (!socket || !user) return;
 
-    const newSocket = io('http://localhost:5000'); // Adjust for production
-    setSocket(newSocket);
-
-    newSocket.on('connect', () => {
-      newSocket.emit('join_room', user._id);
-    });
-
-    newSocket.on('new_notification', (notification: Notification) => {
+    const handleNewNotification = (notification: Notification) => {
       setNotifications((prev) => [notification, ...prev]);
       setUnreadCount((prev) => prev + 1);
-      toast.info(notification.title, {
+      toast.info(notification.title || 'New Notification', {
         description: notification.message,
       });
-    });
+    };
+
+    socket.on('new_notification', handleNewNotification);
 
     return () => {
-      newSocket.disconnect();
+      socket.off('new_notification', handleNewNotification);
     };
-  }, [user, fetchNotifications]);
+  }, [socket, user]);
 
   const markAsRead = async (id: string) => {
     try {

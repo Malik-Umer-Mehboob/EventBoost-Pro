@@ -4,13 +4,13 @@ import { motion } from 'framer-motion';
 import { Sparkles, ArrowLeft } from 'lucide-react';
 import { toast } from 'sonner';
 import EventForm from '../components/events/EventForm';
-import { createEvent, EventData } from '../api/eventApi';
+import { createEvent } from '../api/eventApi';
 
 const CreateEvent: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
-  const handleSubmit = async (data: EventData) => {
+  const handleSubmit = async (data: FormData) => {
     setLoading(true);
     try {
       await createEvent(data);

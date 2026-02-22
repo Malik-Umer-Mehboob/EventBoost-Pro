@@ -35,55 +35,59 @@ const LandingRedirect = () => {
   return <Navigate to={dashboardPath} />;
 };
 
+import { SocketProvider } from './context/SocketContext';
+
 const App = () => {
   return (
     <AuthProvider>
-      <Router>
-        <Routes>
-          {/* Auth Layout Group */}
-          <Route element={<AuthLayout />}>
-            <Route path="/login" element={<Login />} />
-            <Route path="/register" element={<Register />} />
-            <Route path="/forgot-password" element={<ForgotPassword />} />
-            <Route path="/auth-success" element={<AuthSuccess />} />
-            <Route path="/payment-success" element={<PaymentSuccess />} />
-          </Route>
-
-          {/* Main Layout Group (Authenticated/Discovery) */}
-          <Route element={<MainLayout />}>
-            <Route path="/events" element={<EventList />} />
-            <Route path="/events/:id" element={<EventDetails />} />
-            
-            <Route path="/" element={<LandingRedirect />} />
-
-            <Route element={<ProtectedRoute />}>
-              <Route path="/profile" element={<UserDashboard />} />
-              <Route path="/profile/transactions" element={<Transactions />} />
+      <SocketProvider>
+        <Router>
+          <Routes>
+            {/* Auth Layout Group */}
+            <Route element={<AuthLayout />}>
+              <Route path="/login" element={<Login />} />
+              <Route path="/register" element={<Register />} />
+              <Route path="/forgot-password" element={<ForgotPassword />} />
+              <Route path="/auth-success" element={<AuthSuccess />} />
+              <Route path="/payment-success" element={<PaymentSuccess />} />
             </Route>
 
-            <Route element={<ProtectedRoute allowedRoles={['admin']} />}>
-              <Route path="/admin/dashboard" element={<AdminDashboard />} />
-              <Route path="/admin/transactions" element={<AdminTransactions />} />
+            {/* Main Layout Group (Authenticated/Discovery) */}
+            <Route element={<MainLayout />}>
+              <Route path="/events" element={<EventList />} />
+              <Route path="/events/:id" element={<EventDetails />} />
+              
+              <Route path="/" element={<LandingRedirect />} />
+
+              <Route element={<ProtectedRoute />}>
+                <Route path="/profile" element={<UserDashboard />} />
+                <Route path="/profile/transactions" element={<Transactions />} />
+              </Route>
+
+              <Route element={<ProtectedRoute allowedRoles={['admin']} />}>
+                <Route path="/admin/dashboard" element={<AdminDashboard />} />
+                <Route path="/admin/transactions" element={<AdminTransactions />} />
+              </Route>
+
+              <Route element={<ProtectedRoute allowedRoles={['organizer']} />}>
+                <Route path="/organizer-dashboard" element={<OrganizerDashboard />} />
+                <Route path="/create-event" element={<CreateEvent />} />
+              </Route>
+
+              <Route element={<ProtectedRoute allowedRoles={['user']} />}>
+                <Route path="/user/dashboard" element={<UserDashboard />} />
+              </Route>
+
+              <Route element={<ProtectedRoute allowedRoles={['admin', 'organizer']} />}>
+                <Route path="/edit-event/:id" element={<EditEvent />} />
+              </Route>
             </Route>
 
-            <Route element={<ProtectedRoute allowedRoles={['organizer']} />}>
-              <Route path="/organizer-dashboard" element={<OrganizerDashboard />} />
-              <Route path="/create-event" element={<CreateEvent />} />
-            </Route>
-
-            <Route element={<ProtectedRoute allowedRoles={['user']} />}>
-              <Route path="/user/dashboard" element={<UserDashboard />} />
-            </Route>
-
-            <Route element={<ProtectedRoute allowedRoles={['admin', 'organizer']} />}>
-              <Route path="/edit-event/:id" element={<EditEvent />} />
-            </Route>
-          </Route>
-
-          <Route path="*" element={<Navigate to="/" />} />
-        </Routes>
-      </Router>
-      <Toaster position="top-right" richColors />
+            <Route path="*" element={<Navigate to="/" />} />
+          </Routes>
+        </Router>
+        <Toaster position="top-right" richColors />
+      </SocketProvider>
     </AuthProvider>
   );
 };

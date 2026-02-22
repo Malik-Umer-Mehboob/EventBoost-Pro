@@ -3,6 +3,8 @@ const Event = require('../models/Event');
 const Booking = require('../models/Booking');
 const Transaction = require('../models/Transaction');
 const bcrypt = require('bcryptjs');
+const { broadcastEmergencyAlert } = require('../config/socket');
+const { notifyMany } = require('../services/notificationService');
 
 // @desc    Create a new Organizer
 // @route   POST /api/admin/create-organizer
@@ -153,8 +155,49 @@ const getAllTransactions = async (req, res) => {
   }
 };
 
+// @desc    Emergency / platform broadcast
+// @route   POST /api/admin/broadcast
+// @access  Private/Admin
+const broadcastEmergency = async (req, res) => {
+  try {
+    const { title, message, eventId, targetRole } = req.body;
+    if (!title || !message) {
+      return res.status(400).json({ message: 'title and message are required' });
+    }
+
+    // Determine target socket rooms
+    const rooms = [];
+    if (eventId) rooms.push(`event_${eventId}`);
+    if (targetRole) rooms.push(`role_${targetRole}`);
+
+    // Broadcast via WebSocket (rooms=[] means platform-wide)
+    broadcastEmergencyAlert({ title, message, eventId: eventId || null }, rooms);
+
+    // Also persist as notifications for offline users
+    if (eventId) {
+      const bookings = await Booking.find({ event: eventId, paymentStatus: 'paid' }).select('user').lean();
+      const recipientIds = bookings.map(b => b.user);
+      if (recipientIds.length > 0) {
+        await notifyMany(recipientIds, {
+          type: 'announcement',
+          title,
+          message,
+          event: eventId,
+          idempotencyKeyBase: `emergency-${eventId}-${Date.now()}`
+        });
+      }
+    }
+
+    res.json({ message: 'Emergency alert broadcast successfully' });
+  } catch (error) {
+    console.error('Broadcast emergency error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
 module.exports = {
   createOrganizer,
   getAdminDashboard,
-  getAllTransactions
+  getAllTransactions,
+  broadcastEmergency
 };

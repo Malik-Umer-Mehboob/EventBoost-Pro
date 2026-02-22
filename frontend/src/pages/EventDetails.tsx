@@ -5,6 +5,7 @@ import { Calendar, MapPin, Users, ShieldCheck, ArrowLeft, Loader2, Share2, Faceb
 import { getEventById, EventData } from '../api/eventApi';
 import CheckoutButton from '../components/bookings/CheckoutButton';
 import AnnouncementModal from '../components/AnnouncementModal';
+import { useRealTime } from '../hooks/useRealTime';
 import { useAuth } from '../context/AuthContext';
 import { toast } from 'sonner';
 
@@ -17,6 +18,8 @@ const EventDetails: React.FC = () => {
   const [quantity, setQuantity] = useState(1);
   const [isAnnouncementOpen, setIsAnnouncementOpen] = useState(false);
   
+  const { socket, joinEvent, leaveEvent } = useRealTime();
+
   const isOwner = user?._id === (event?.organizer?._id || event?.createdBy?._id);
   const isAdmin = user?.role === 'admin';
 
@@ -36,6 +39,24 @@ const EventDetails: React.FC = () => {
     };
     fetchEvent();
   }, [id, navigate]);
+
+  // Real-time listeners
+  useEffect(() => {
+    if (!id || !socket) return;
+
+    joinEvent(id);
+
+    socket.on('event:attendee_count', ({ eventId, soldTickets }: { eventId: string, soldTickets: number }) => {
+      if (eventId === id) {
+        setEvent((prev) => prev ? { ...prev, soldTickets } : null);
+      }
+    });
+
+    return () => {
+      leaveEvent(id);
+      socket.off('event:attendee_count');
+    };
+  }, [id, socket, joinEvent, leaveEvent]);
 
   if (loading) {
     return (

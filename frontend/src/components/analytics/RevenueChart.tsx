@@ -20,15 +20,25 @@ interface RevenueChartProps {
 const CustomTooltip = ({ active, payload, label }: any) => {
   if (active && payload && payload.length) {
     return (
-      <div className="bg-white border border-gray-100 rounded-2xl shadow-xl p-4 text-sm">
-        <p className="font-black text-gray-900 mb-2">{label}</p>
-        {payload.map((entry: any) => (
-          <p key={entry.dataKey} style={{ color: entry.color }} className="font-bold">
-            {entry.name}: {typeof entry.value === 'number' && entry.name.toLowerCase().includes('revenue')
-              ? `$${entry.value.toLocaleString()}`
-              : entry.value.toLocaleString()}
-          </p>
-        ))}
+      <div className="glass p-4 border border-white/20 shadow-2xl rounded-2xl min-w-[160px]">
+        <p className="text-[10px] font-black text-indigo-600 uppercase tracking-widest mb-2 border-b border-white/10 pb-2">
+          {label}
+        </p>
+        <div className="space-y-1.5">
+          {payload.map((entry: any) => (
+            <div key={entry.dataKey} className="flex items-center justify-between gap-4">
+              <div className="flex items-center gap-2">
+                <div className="w-2 h-2 rounded-full" style={{ backgroundColor: entry.color }} />
+                <span className="text-xs font-bold text-gray-500">{entry.name}</span>
+              </div>
+              <span className="text-xs font-black text-gray-900">
+                {typeof entry.value === 'number' && entry.name.toLowerCase().includes('revenue')
+                  ? `$${entry.value.toLocaleString()}`
+                  : entry.value.toLocaleString()}
+              </span>
+            </div>
+          ))}
+        </div>
       </div>
     );
   }

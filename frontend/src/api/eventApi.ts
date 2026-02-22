@@ -31,8 +31,10 @@ export const getCategories = async () => {
   return data;
 };
 
-export const createEvent = async (eventData: EventData) => {
-  const { data } = await api.post('/events', eventData);
+export const createEvent = async (eventData: EventData | FormData) => {
+  const { data } = await api.post('/events', eventData, {
+    headers: eventData instanceof FormData ? { 'Content-Type': 'multipart/form-data' } : {}
+  });
   return data;
 };
 
@@ -56,8 +58,10 @@ export const getPublicEvents = async () => {
   return data;
 };
 
-export const updateEvent = async (id: string, eventData: Partial<EventData>) => {
-  const { data } = await api.put(`/events/${id}`, eventData);
+export const updateEvent = async (id: string, eventData: Partial<EventData> | FormData) => {
+  const { data } = await api.put(`/events/${id}`, eventData, {
+    headers: eventData instanceof FormData ? { 'Content-Type': 'multipart/form-data' } : {}
+  });
   return data;
 };
 

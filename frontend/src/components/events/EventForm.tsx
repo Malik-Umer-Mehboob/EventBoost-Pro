@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Upload, X, Calendar, MapPin, Tag, DollarSign, Users, Sparkles } from 'lucide-react';
+import { Calendar, MapPin, Tag, DollarSign, Users, Sparkles } from 'lucide-react';
 import { EventData, getCategories } from '../../api/eventApi';
+import ImageUploader from '../common/ImageUploader';
 
 interface EventFormProps {
   initialData?: EventData;
-  onSubmit: (data: any) => void;
+  onSubmit: (data: FormData) => void;
   isLoading: boolean;
 }
 
@@ -24,7 +25,7 @@ const EventForm: React.FC<EventFormProps> = ({ initialData, onSubmit, isLoading 
   );
 
   const [categories, setCategories] = useState<string[]>([]);
-  const [preview, setPreview] = useState<string | null>(initialData?.bannerImage?.url || null);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
   useEffect(() => {
     const fetchCategories = async () => {
@@ -44,18 +45,21 @@ const EventForm: React.FC<EventFormProps> = ({ initialData, onSubmit, isLoading 
     setFormData((prev) => ({ ...prev, [name]: finalValue }));
   };
 
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setPreview(reader.result as string);
-        // In a real app, you'd upload this to Cloudinary here or on submit
-        // For simplicity, we'll pass the base64 for now
-        setFormData((prev) => ({ ...prev, bannerImage: { url: reader.result as string } }));
-      };
-      reader.readAsDataURL(file);
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    const data = new FormData();
+    Object.keys(formData).forEach(key => {
+      const value = (formData as any)[key];
+      if (value !== undefined && key !== 'bannerImage') {
+        data.append(key, value);
+      }
+    });
+
+    if (selectedFile) {
+      data.append('banner', selectedFile);
     }
+
+    onSubmit(data);
   };
 
   return (
@@ -63,10 +67,7 @@ const EventForm: React.FC<EventFormProps> = ({ initialData, onSubmit, isLoading 
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       className="glass p-8 rounded-2xl space-y-6 max-w-4xl mx-auto"
-      onSubmit={(e) => {
-        e.preventDefault();
-        onSubmit(formData);
-      }}
+      onSubmit={handleSubmit}
     >
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
         {/* Left Column: Basic Info */}
@@ -189,34 +190,11 @@ const EventForm: React.FC<EventFormProps> = ({ initialData, onSubmit, isLoading 
             </div>
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Banner Image</label>
-            <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-xl hover:border-indigo-500 transition-colors relative overflow-hidden group">
-              {preview ? (
-                <div className="relative w-full h-40">
-                  <img src={preview} alt="Preview" className="w-full h-full object-cover rounded-lg" />
-                  <button
-                    type="button"
-                    onClick={() => setPreview(null)}
-                    className="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
-                  >
-                    <X className="w-4 h-4" />
-                  </button>
-                </div>
-              ) : (
-                <div className="space-y-1 text-center">
-                  <Upload className="mx-auto h-12 w-12 text-gray-400" />
-                  <div className="flex text-sm text-gray-600">
-                    <label className="relative cursor-pointer bg-white rounded-md font-medium text-indigo-600 hover:text-indigo-500 focus-within:outline-none">
-                      <span>Upload a file</span>
-                      <input type="file" className="sr-only" accept="image/*" onChange={handleImageChange} />
-                    </label>
-                  </div>
-                  <p className="text-xs text-gray-500">PNG, JPG up to 10MB</p>
-                </div>
-              )}
-            </div>
-          </div>
+          <ImageUploader 
+            label="Event Banner"
+            currentImage={initialData?.bannerImage?.url}
+            onImageSelect={setSelectedFile}
+          />
 
           <div className="flex items-center gap-3 py-2">
             <input

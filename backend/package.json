@@ -23,6 +23,7 @@
     "lucide-react": "^0.575.0",
     "mongoose": "^9.2.1",
     "multer": "^2.0.2",
+    "multer-storage-cloudinary": "^4.0.0",
     "node-cron": "^4.2.1",
     "nodemailer": "^8.0.1",
     "passport": "^0.7.0",

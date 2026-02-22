@@ -3,12 +3,13 @@ import { useNavigate, Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Plus, Calendar, Users, BarChart3, Edit3, Trash2, Loader2, Sparkles, X, TrendingUp, RefreshCw } from 'lucide-react';
 import { deleteEvent } from '../api/eventApi';
-
+import { useRealTime } from '../hooks/useRealTime';
 import { toast } from 'sonner';
 import api from '../api/axios';
 import StatsCard from '../components/analytics/StatsCard';
 import RevenueChart from '../components/analytics/RevenueChart';
 import AttendeeTable from '../components/analytics/AttendeeTable';
+import Skeleton from '../components/common/Skeleton';
 
 interface EventData {
   _id: string;
@@ -35,6 +36,7 @@ const OrganizerDashboard: React.FC = () => {
   const [stats, setStats] = useState<OrgStats | null>(null);
   const [monthlySales, setMonthlySales] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const { socket } = useRealTime();
 
   // Attendee modal state
   const [attendeeEvent, setAttendeeEvent] = useState<EventData | null>(null);
@@ -44,8 +46,8 @@ const OrganizerDashboard: React.FC = () => {
 
   const navigate = useNavigate();
 
-  const fetchDashboard = useCallback(async () => {
-    setLoading(true);
+  const fetchDashboard = useCallback(async (isSilent = false) => {
+    if (!isSilent) setLoading(true);
     try {
       const { data } = await api.get('/organizers/analytics');
       setEvents(data.events || []);
@@ -54,15 +56,30 @@ const OrganizerDashboard: React.FC = () => {
     } catch {
       toast.error('Failed to load organizer analytics');
     } finally {
-      setLoading(false);
+      if (!isSilent) setLoading(false);
     }
   }, []);
 
   useEffect(() => {
     fetchDashboard();
-    const interval = setInterval(fetchDashboard, 30000);
-    return () => clearInterval(interval);
   }, [fetchDashboard]);
+
+  // Real-time updates
+  useEffect(() => {
+    if (!socket) return;
+
+    const handleUpdate = () => {
+      fetchDashboard(true); // Silent refresh
+    };
+
+    socket.on('event:updated', handleUpdate);
+    socket.on('event:attendee_count', handleUpdate);
+
+    return () => {
+      socket.off('event:updated', handleUpdate);
+      socket.off('event:attendee_count', handleUpdate);
+    };
+  }, [socket, fetchDashboard]);
 
   const openAttendees = async (event: EventData) => {
     setAttendeeEvent(event);
@@ -112,7 +129,7 @@ const OrganizerDashboard: React.FC = () => {
           </div>
           <div className="flex items-center gap-3">
             <button
-              onClick={fetchDashboard}
+              onClick={() => fetchDashboard()}
               className="p-3 bg-white border border-gray-100 rounded-2xl text-gray-400 hover:text-indigo-600 hover:border-indigo-100 transition-all shadow-sm"
               title="Refresh"
             >
@@ -130,23 +147,38 @@ const OrganizerDashboard: React.FC = () => {
 
         {/* KPI Stats */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-10">
-          {kpiCards.map(card => <StatsCard key={card.label} {...card} />)}
+          {loading 
+            ? Array(4).fill(0).map((_, i) => (
+                <div key={i} className="glass p-6 rounded-3xl space-y-4">
+                  <Skeleton width={48} height={48} />
+                  <div className="space-y-2">
+                    <Skeleton width="60%" height={12} />
+                    <Skeleton width="80%" height={24} />
+                  </div>
+                </div>
+              ))
+            : kpiCards.map(card => <StatsCard key={card.label} {...card} />)
+          }
         </div>
 
         {/* Registration Trend Chart */}
-        {monthlySales.length > 0 && (
+        {(loading || monthlySales.length > 0) && (
           <div className="glass p-8 rounded-3xl mb-10">
             <h2 className="text-lg font-black text-gray-900 mb-6 flex items-center gap-2">
               <TrendingUp className="w-5 h-5 text-indigo-600" />
               Registration Trends (Last 6 Months)
             </h2>
-            <RevenueChart
-              data={monthlySales}
-              lines={[
-                { key: 'registrations', label: 'Tickets Registered', color: '#6366f1' },
-                { key: 'revenue', label: 'Revenue ($)', color: '#10b981' },
-              ]}
-            />
+            {loading ? (
+              <Skeleton width="100%" height={280} />
+            ) : (
+              <RevenueChart
+                data={monthlySales}
+                lines={[
+                  { key: 'registrations', label: 'Tickets Registered', color: '#6366f1' },
+                  { key: 'revenue', label: 'Revenue ($)', color: '#10b981' },
+                ]}
+              />
+            )}
           </div>
         )}
 

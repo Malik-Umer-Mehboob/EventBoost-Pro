@@ -44,14 +44,22 @@ const NotificationDropdown = () => {
         className="relative p-2 text-gray-500 hover:text-indigo-600 hover:bg-indigo-50/50 rounded-full transition-all"
       >
         <Bell className="w-6 h-6" />
-        {unreadCount > 0 && (
-          <span className="absolute top-1 right-1 flex h-4 w-4">
-            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75"></span>
-            <span className="relative inline-flex rounded-full h-4 w-4 bg-rose-500 text-[10px] font-bold text-white items-center justify-center">
-              {unreadCount}
-            </span>
-          </span>
-        )}
+        <AnimatePresence>
+          {unreadCount > 0 && (
+            <motion.span 
+              initial={{ scale: 0 }}
+              animate={{ scale: 1 }}
+              exit={{ scale: 0 }}
+              key={unreadCount}
+              className="absolute top-1 right-1 flex h-4 w-4"
+            >
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-4 w-4 bg-rose-500 text-[10px] font-black text-white items-center justify-center shadow-sm">
+                {unreadCount}
+              </span>
+            </motion.span>
+          )}
+        </AnimatePresence>
       </motion.button>
 
       <AnimatePresence>

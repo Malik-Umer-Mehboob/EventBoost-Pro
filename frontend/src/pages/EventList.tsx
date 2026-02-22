@@ -1,13 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Sparkles, Search, Loader2 } from 'lucide-react';
+import { Sparkles, Search } from 'lucide-react';
 import { getPublicEvents, EventData } from '../api/eventApi';
+import { useRealTime } from '../hooks/useRealTime';
 import { useAuth } from '../context/AuthContext';
 import { toast } from 'sonner';
 import EventCard from '../components/EventCard';
 import EventFilters from '../components/events/EventFilters';
 import BookingModal from '../components/bookings/BookingModal';
+import Skeleton from '../components/common/Skeleton';
 
 const EventList: React.FC = () => {
   const [events, setEvents] = useState<EventData[]>([]);
@@ -19,6 +21,8 @@ const EventList: React.FC = () => {
   const navigate = useNavigate();
   const [selectedEvent, setSelectedEvent] = useState<EventData | null>(null);
   const [isBookingModalOpen, setIsBookingModalOpen] = useState(false);
+
+  const { socket } = useRealTime();
 
   const handleBuyTicket = (event: EventData) => {
     if (!user) {
@@ -44,6 +48,32 @@ const EventList: React.FC = () => {
     };
     fetchEvents();
   }, []);
+
+  // Listen for real-time updates
+  useEffect(() => {
+    if (!socket) return;
+
+    socket.on('event:updated', ({ event, action }: { event: any, action: string }) => {
+      setEvents((prev) => {
+        if (action === 'deleted') {
+          return prev.filter((e) => e._id !== event._id);
+        }
+        if (action === 'created') {
+          // Check if already exists to avoid duplicates
+          if (prev.find((e) => e._id === event._id)) return prev;
+          return [event, ...prev];
+        }
+        if (action === 'updated') {
+          return prev.map((e) => (e._id === event._id ? { ...e, ...event } : e));
+        }
+        return prev;
+      });
+    });
+
+    return () => {
+      socket.off('event:updated');
+    };
+  }, [socket]);
 
   useEffect(() => {
     let result = events;
@@ -85,9 +115,24 @@ const EventList: React.FC = () => {
 
         {/* List */}
         {loading ? (
-          <div className="flex flex-col items-center justify-center py-24 gap-4">
-            <Loader2 className="w-12 h-12 text-indigo-600 animate-spin" />
-            <p className="text-gray-500 font-medium">Curating the best events for you...</p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 px-2">
+            {Array(6).fill(0).map((_, i) => (
+              <div key={i} className="bg-white rounded-[32px] overflow-hidden shadow-sm border border-gray-100">
+                <Skeleton width="100%" height={240} className="rounded-none" />
+                <div className="p-7 space-y-4">
+                  <div className="flex justify-between">
+                    <Skeleton width="70%" height={24} />
+                    <Skeleton width="20%" height={24} />
+                  </div>
+                  <Skeleton width="100%" height={40} />
+                  <div className="space-y-2">
+                    <Skeleton width="60%" height={12} />
+                    <Skeleton width="50%" height={12} />
+                  </div>
+                  <Skeleton width="100%" height={56} className="mt-4" />
+                </div>
+              </div>
+            ))}
           </div>
         ) : (
           <AnimatePresence>
@@ -99,9 +144,9 @@ const EventList: React.FC = () => {
                 <motion.div
                   key={event._id}
                   layout
-                  initial={{ opacity: 0, scale: 0.9 }}
+                  initial={{ opacity: 0, scale: 0.95 }}
                   animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.9 }}
+                  exit={{ opacity: 0, scale: 0.95 }}
                   transition={{ duration: 0.3 }}
                 >
                   <EventCard 

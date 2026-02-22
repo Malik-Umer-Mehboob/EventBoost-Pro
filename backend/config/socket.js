@@ -1,4 +1,6 @@
 const { Server } = require('socket.io');
+const jwt = require('jsonwebtoken');
+const User = require('../models/User');
 
 let io;
 
@@ -10,26 +12,47 @@ const initSocket = (server) => {
     }
   });
 
+  // Socket middleware for JWT verification
+  io.use(async (socket, next) => {
+    try {
+      const token = socket.handshake.auth.token;
+      if (!token) {
+        return next(new Error('Authentication error: Token missing'));
+      }
+
+      const decoded = jwt.verify(token, process.env.JWT_SECRET);
+      const user = await User.findById(decoded.id).select('-password');
+      
+      if (!user) {
+        return next(new Error('Authentication error: User not found'));
+      }
+
+      socket.user = user;
+      next();
+    } catch (err) {
+      console.error('Socket Auth Error:', err.message);
+      next(new Error('Authentication error: Invalid token'));
+    }
+  });
+
   io.on('connection', (socket) => {
-    console.log(`User connected: ${socket.id}`);
+    console.log(`User connected: ${socket.id} (${socket.user.name})`);
 
-    // Join a room specific to the user
-    socket.on('join_room', (userId) => {
-      socket.join(`user_${userId}`);
-      console.log(`User ${userId} joined room user_${userId}`);
-    });
+    // Automatically join personal room
+    socket.join(`user_${socket.user._id}`);
+    
+    // Automatically join role-based room
+    socket.join(`role_${socket.user.role}`);
 
-    // Join/leave a room for a specific event (for live attendee counts & updates)
+    // Manual room management
     socket.on('join_event', (eventId) => {
       socket.join(`event_${eventId}`);
-    });
-    socket.on('leave_event', (eventId) => {
-      socket.leave(`event_${eventId}`);
+      console.log(`User ${socket.user.name} joined event room: event_${eventId}`);
     });
 
-    // Join a role-based room (admin, organizer)
-    socket.on('join_role', (role) => {
-      socket.join(`role_${role}`);
+    socket.on('leave_event', (eventId) => {
+      socket.leave(`event_${eventId}`);
+      console.log(`User ${socket.user.name} left event room: event_${eventId}`);
     });
 
     socket.on('disconnect', () => {

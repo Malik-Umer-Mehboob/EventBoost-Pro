@@ -1,7 +1,8 @@
 const Event = require('../models/Event');
 const { notifyMany } = require('../services/notificationService');
 const { sendBatchEmails } = require('../services/emailService');
-const User = require('../models/User'); // Need to fetch emails for batch sending
+const User = require('../models/User');
+const { broadcastEventUpdate, broadcastEmergencyAlert } = require('../config/socket');
 
 const CATEGORIES = [
   'Conference',
@@ -36,6 +37,13 @@ const createEvent = async (req, res) => {
       return res.status(400).json({ message: 'Invalid category' });
     }
 
+    let bannerData = {};
+    if (req.file) {
+      bannerData = { url: req.file.path, public_id: req.file.filename };
+    } else if (bannerImage && typeof bannerImage === 'string') {
+      bannerData = { url: bannerImage };
+    }
+
     const event = await Event.create({
       title,
       description,
@@ -44,12 +52,13 @@ const createEvent = async (req, res) => {
       category,
       ticketPrice,
       ticketQuantity,
-      bannerImage,
+      bannerImage: bannerData,
       isFeatured,
       organizer: req.user.id,
       createdBy: req.user.id,
     });
 
+    broadcastEventUpdate({ ...event.toObject(), action: 'created' });
     res.status(201).json(event);
   } catch (error) {
     console.error('Error in createEvent:', error);
@@ -126,11 +135,23 @@ const updateEvent = async (req, res) => {
       return res.status(403).json({ message: 'Not authorized to update this event' });
     }
 
-    const updatedEvent = await Event.findByIdAndUpdate(req.params.id, req.body, {
+    const updateData = { ...req.body };
+    if (req.file) {
+      // Delete old banner if exists
+      if (event.bannerImage && event.bannerImage.public_id) {
+        await require('../config/cloudinary').uploader.destroy(event.bannerImage.public_id);
+      }
+      updateData.bannerImage = { url: req.file.path, public_id: req.file.filename };
+    } else if (req.body.bannerImage && typeof req.body.bannerImage === 'string') {
+        updateData.bannerImage = { url: req.body.bannerImage };
+    }
+
+    const updatedEvent = await Event.findByIdAndUpdate(req.params.id, updateData, {
       returnDocument: 'after',
       runValidators: true,
     });
 
+    broadcastEventUpdate({ ...updatedEvent.toObject(), action: 'updated' });
     res.json(updatedEvent);
 
     // Notify registered attendees if there are any
@@ -212,7 +233,13 @@ const deleteEvent = async (req, res) => {
       });
     }
 
+    // Delete banner from Cloudinary if exists
+    if (event.bannerImage && event.bannerImage.public_id) {
+      await require('../config/cloudinary').uploader.destroy(event.bannerImage.public_id);
+    }
+
     await event.deleteOne();
+    broadcastEventUpdate({ _id: req.params.id, action: 'deleted' });
     res.json({ message: 'Event removed' });
   } catch (error) {
     console.error('Error in deleteEvent:', error);
@@ -318,6 +345,12 @@ const sendAnnouncement = async (req, res) => {
       event: event._id,
       sender: req.user.id
     });
+
+    // Broadcast live alert to users inside the event room
+    broadcastEmergencyAlert(
+      { title: `Announcement: ${title}`, message, eventId: event._id },
+      [`event_${event._id}`]
+    );
 
     res.json({ message: 'Announcement sent to all attendees' });
   } catch (error) {
