@@ -2,7 +2,7 @@
 
 EventBoost-Pro is a **production-ready full-stack event management and ticketing platform** that enables organizers to create events, users to purchase tickets securely, and admins to manage the entire platform efficiently.
 
-Built using **React (Frontend)**, **Node.js/Express (Backend)**, and **MongoDB Atlas**, the platform includes real-time alerts, secure payments, automatic refunds, email reminders, and role-based access control.
+Built using **React (Frontend)**, **Node.js/Express (Backend)**, and **MongoDB Atlas**, the platform includes real-time alerts, secure payments, automatic refunds, email reminders, profile management, and role-based access control.
 
 ---
 
@@ -18,6 +18,34 @@ Built using **React (Frontend)**, **Node.js/Express (Backend)**, and **MongoDB A
   - Admin
   - Organizer
   - User
+
+---
+
+## 🧑‍💻 User & Organizer Profile Management
+
+### User Profile
+- View and update personal information:
+  - Name
+  - Email
+  - Password
+  - Profile picture
+- View purchased tickets and event history
+- Receive email reminders for upcoming events
+- Manage notification preferences
+
+### Organizer Profile
+- Update organizer information:
+  - Name
+  - Email
+  - Password
+  - Profile picture / Logo
+- Manage events dashboard:
+  - Create / Update / Delete events
+  - Upload event banners
+  - Set ticket price & quantity
+  - Send manual or automated email reminders
+  - Track attendee list and ticket sales
+- View organizer-specific statistics
 
 ---
 
@@ -116,12 +144,14 @@ Powered by Socket.io:
 - View ticket sales
 - View attendees
 - Send event reminders
+- Update organizer profile
 
 ## 👥 User Dashboard
 - View purchased tickets
 - Download ticket PDF
 - View refund status
 - View notification history
+- Update personal profile (name, email, password, profile picture)
 - Track event participation
 
 ---
@@ -161,7 +191,6 @@ Powered by Socket.io:
 - Automatic refund protection
 - Environment variables for sensitive data
 - Admin-only critical actions
-
 
 ---
 
