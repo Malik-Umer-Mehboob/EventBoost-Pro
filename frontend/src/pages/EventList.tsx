@@ -10,7 +10,8 @@ import EventCard from '../components/EventCard';
 import EventFilters from '../components/events/EventFilters';
 import BookingModal from '../components/bookings/BookingModal';
 import Skeleton from '../components/common/Skeleton';
-import { cancelEventAdmin } from '../api/adminApi';
+import { cancelEventAdmin, deleteEventAdmin } from '../api/adminApi';
+import { deleteEvent } from '../api/eventApi';
 
 const EventList: React.FC = () => {
   const [events, setEvents] = useState<EventData[]>([]);
@@ -43,12 +44,30 @@ const EventList: React.FC = () => {
     try {
         const response = await cancelEventAdmin(id);
         toast.success(response.message || 'Event cancelled successfully');
-        // socket update will handle the UI refresh if implemented on backend
-        // but let's update local state just in case
         setEvents(prev => prev.map(e => e._id === id ? { ...e, status: 'cancelled' } : e));
     } catch (error) {
         console.error('Failed to cancel event:', error);
         toast.error('Failed to cancel event and process refunds');
+    }
+  };
+
+  const handleEdit = (event: EventData) => {
+    navigate(`/edit-event/${event._id}`);
+  };
+
+  const handleDelete = async (id: string) => {
+    if (!window.confirm('Are you sure you want to remove this event?')) return;
+    
+    try {
+      if (user?.role === 'admin') {
+        await deleteEventAdmin(id);
+      } else {
+        await deleteEvent(id);
+      }
+      toast.success('Event removed successfully');
+      setEvents(prev => prev.filter(e => e._id !== id));
+    } catch {
+      toast.error('Failed to remove event');
     }
   };
 
@@ -171,6 +190,8 @@ const EventList: React.FC = () => {
                     event={event} 
                     onBuy={handleBuyTicket}
                     onCancel={handleCancelEvent}
+                    onEdit={handleEdit}
+                    onDelete={handleDelete}
                     isOwner={user?._id === (event.organizer?._id || event.createdBy?._id)}
                     isAdmin={user?.role === 'admin'}
                   />

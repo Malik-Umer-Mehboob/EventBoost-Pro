@@ -3,6 +3,17 @@ const router = express.Router();
 const { protect, authorize } = require('../middleware/authMiddleware');
 const { announcementLimiter } = require('../middleware/rateLimiter');
 const { getMyEvents, sendAnnouncement, getOrganizerDashboard, getEventAttendees } = require('../controllers/eventController');
+const { getOrganizerProfile, updateOrganizerProfile } = require('../controllers/organizerController');
+
+// @desc    Get Organizer Profile
+// @route   GET /api/organizers/profile
+// @access  Private/Organizer
+router.get('/profile', protect, authorize('organizer'), getOrganizerProfile);
+
+// @desc    Update Organizer Profile (name only)
+// @route   PATCH /api/organizers/profile
+// @access  Private/Organizer
+router.patch('/profile', protect, authorize('organizer'), updateOrganizerProfile);
 
 // @desc    Get Organizer Analytics Dashboard
 // @route   GET /api/organizers/analytics

@@ -54,7 +54,7 @@ const getUserProfile = async (req, res) => {
   }
 };
 
-// @desc    Update user profile (name, email)
+// @desc    Update user profile (name only)
 // @route   PUT /api/users/profile
 // @access  Private
 const updateProfile = async (req, res) => {
@@ -65,18 +65,13 @@ const updateProfile = async (req, res) => {
       return res.status(404).json({ message: 'User not found' });
     }
 
-    const { name, email } = req.body;
+    const { name } = req.body;
 
-    if (name) user.name = name;
-    
-    if (email && email !== user.email) {
-      const emailExists = await User.findOne({ email });
-      if (emailExists) {
-        return res.status(400).json({ message: 'Email already in use' });
-      }
-      user.email = email;
+    if (!name) {
+      return res.status(400).json({ message: 'Name is required' });
     }
 
+    user.name = name;
     await user.save();
 
     res.json({

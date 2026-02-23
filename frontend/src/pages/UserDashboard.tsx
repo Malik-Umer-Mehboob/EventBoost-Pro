@@ -33,7 +33,7 @@ const UserDashboard: React.FC = () => {
 
   const handleSaveProfile = async () => {
     try {
-      const { data } = await axios.put('/users/profile', editData);
+      const { data } = await axios.patch('/users/profile', { name: editData.name });
       
       // Update local storage and context state
       if (user) {
@@ -159,8 +159,8 @@ const UserDashboard: React.FC = () => {
                     <input 
                       type="email" 
                       value={editData.email} 
-                      onChange={(e) => setEditData({...editData, email: e.target.value})}
-                      className="w-full px-5 py-3 rounded-2xl bg-white/50 backdrop-blur-sm border border-indigo-100 focus:border-indigo-500 outline-none transition-all font-bold"
+                      disabled
+                      className="w-full px-5 py-3 rounded-2xl bg-gray-100/50 backdrop-blur-sm border border-gray-200 outline-none transition-all font-bold cursor-not-allowed text-gray-400"
                     />
                   </div>
                   <div className="flex justify-center md:justify-start gap-3 pt-2">

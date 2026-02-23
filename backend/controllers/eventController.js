@@ -408,16 +408,33 @@ const getOrganizerDashboard = async (req, res) => {
       ])
     ]);
 
-    const totalRevenue = events.reduce((a, e) => a + ((e.soldTickets || 0) * (e.ticketPrice || 0)), 0);
-    const totalSold = events.reduce((a, e) => a + (e.soldTickets || 0), 0);
+    // Precise revenue calculation: sum totalAmount for paid bookings that are NOT refunded
+    const revenueStats = await Booking.aggregate([
+      { 
+        $match: { 
+          event: { $in: events.map(e => e._id) },
+          paymentStatus: 'paid',
+          refundStatus: { $ne: 'completed' }
+        } 
+      },
+      {
+        $group: {
+          _id: null,
+          totalRevenue: { $sum: '$totalAmount' },
+          totalSold: { $sum: '$quantity' }
+        }
+      }
+    ]);
+
+    const stats = {
+      totalEvents: events.length,
+      totalSold: revenueStats[0]?.totalSold || 0,
+      totalRevenue: revenueStats[0]?.totalRevenue || 0,
+      upcomingEvents: events.filter(e => new Date(e.date) >= new Date()).length
+    };
 
     res.json({
-      stats: {
-        totalEvents: events.length,
-        totalSold,
-        totalRevenue,
-        upcomingEvents: events.filter(e => new Date(e.date) >= new Date()).length
-      },
+      stats,
       events,
       monthlySales: monthlySales.map(m => ({
         name: new Date(m._id.year, m._id.month - 1).toLocaleString('default', { month: 'short' }),

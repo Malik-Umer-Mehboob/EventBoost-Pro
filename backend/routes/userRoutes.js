@@ -4,15 +4,14 @@ const { protect, authorize } = require('../middleware/authMiddleware');
 const upload = require('../middleware/uploadMiddleware');
 const { updateProfilePicture, getUserProfile, updateProfile } = require('../controllers/userController');
 
-// @desc    Update User Profile (name/email)
+// @desc    Update User Profile (name only)
 // @route   PUT /api/users/profile
+// @route   PATCH /api/users/profile
 // @access  Private
-router.put('/profile', protect, updateProfile);
-
-// @desc    Get User Profile
-// @route   GET /api/users/profile
-// @access  Private
-router.get('/profile', protect, getUserProfile);
+router.route('/profile')
+    .put(protect, updateProfile)
+    .patch(protect, updateProfile)
+    .get(protect, getUserProfile);
 
 // @desc    Update Profile Picture
 // @route   POST /api/users/profile/picture

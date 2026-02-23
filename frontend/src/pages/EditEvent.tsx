@@ -5,10 +5,13 @@ import { Edit3, ArrowLeft, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import EventForm from '../components/events/EventForm';
 import { getEventById, updateEvent, EventData } from '../api/eventApi';
+import { updateEventAdmin } from '../api/adminApi';
+import { useAuth } from '../context/AuthContext';
 
 const EditEvent: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState(false);
   const [event, setEvent] = useState<EventData | null>(null);
@@ -34,7 +37,11 @@ const EditEvent: React.FC = () => {
     setUpdating(true);
     try {
       if (id) {
-        await updateEvent(id, data);
+        if (user?.role === 'admin') {
+          await updateEventAdmin(id, data);
+        } else {
+          await updateEvent(id, data);
+        }
         toast.success('Event updated successfully!', {
             description: 'Your changes have been saved.',
         });

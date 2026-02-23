@@ -6,7 +6,7 @@ const Ticket = require('../models/Ticket');
 const bcrypt = require('bcryptjs');
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 const nodemailer = require('nodemailer');
-const { broadcastEmergencyAlert, broadcastEventCancellation } = require('../config/socket');
+const { broadcastEmergencyAlert, broadcastEventUpdate } = require('../config/socket');
 const { notifyMany, createNotification } = require('../services/notificationService');
 
 // @desc    Create a new Organizer
@@ -300,15 +300,7 @@ const cancelEvent = async (req, res) => {
     }
 
     // Broadcast via socket
-    if (broadcastEventCancellation) {
-        broadcastEventCancellation(event._id);
-    } else {
-        broadcastEmergencyAlert({ 
-            title: 'Event Cancelled', 
-            message: `The event "${event.title}" has been cancelled and refunds processed.`,
-            eventId: event._id 
-        }, [`event_${event._id}`]);
-    }
+    broadcastEventUpdate({ ...event.toObject(), action: 'cancelled' });
 
     res.json({ 
       message: 'Event cancelled and refunds processed', 
@@ -318,6 +310,65 @@ const cancelEvent = async (req, res) => {
   } catch (error) {
     console.error('Cancel event error:', error);
     res.status(500).json({ message: 'Server error during event cancellation' });
+  }
+};
+
+// @desc    Edit any event
+// @route   PATCH /api/admin/events/:id
+// @access  Private/Admin
+const adminEditEvent = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const updates = { ...req.body };
+
+    // Prevent sensitivity issues
+    delete updates.createdBy;
+    delete updates.organizer;
+
+    const event = await Event.findByIdAndUpdate(id, updates, { 
+      returnDocument: 'after', 
+      runValidators: true 
+    });
+
+    if (!event) {
+      return res.status(404).json({ message: 'Event not found' });
+    }
+
+    broadcastEventUpdate({ ...event.toObject(), action: 'updated' });
+    res.json(event);
+  } catch (error) {
+    console.error('Admin edit event error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+// @desc    Delete any event
+// @route   DELETE /api/admin/events/:id
+// @access  Private/Admin
+const adminDeleteEvent = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const event = await Event.findById(id);
+
+    if (!event) {
+      return res.status(404).json({ message: 'Event not found' });
+    }
+
+    // Delete banner from Cloudinary if exists
+    if (event.bannerImage && event.bannerImage.public_id) {
+      try {
+        await require('../config/cloudinary').uploader.destroy(event.bannerImage.public_id);
+      } catch (e) {
+        console.warn('Cloudinary image deletion failed:', e.message);
+      }
+    }
+
+    await Event.findByIdAndDelete(id);
+    broadcastEventUpdate({ _id: id, action: 'deleted' });
+    res.json({ message: 'Event deleted successfully' });
+  } catch (error) {
+    console.error('Admin delete event error:', error);
+    res.status(500).json({ message: 'Server error' });
   }
 };
 
@@ -347,5 +398,7 @@ module.exports = {
   getAdminDashboard,
   getAllTransactions,
   broadcastEmergency,
-  cancelEvent
+  cancelEvent,
+  adminEditEvent,
+  adminDeleteEvent,
 };

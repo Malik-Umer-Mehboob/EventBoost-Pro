@@ -6,10 +6,15 @@ import { deleteEvent } from '../api/eventApi';
 import { useRealTime } from '../hooks/useRealTime';
 import { toast } from 'sonner';
 import api from '../api/axios';
+import { getOrganizerProfile, updateOrganizerProfile } from '../api/organizerApi';
+import { updateProfilePicture } from '../api/userApi';
+import { useAuth } from '../context/AuthContext';
 import StatsCard from '../components/analytics/StatsCard';
+import ImageUploader from '../components/common/ImageUploader';
 import RevenueChart from '../components/analytics/RevenueChart';
 import AttendeeTable from '../components/analytics/AttendeeTable';
 import Skeleton from '../components/common/Skeleton';
+import { Camera, Save, X as CloseIcon } from 'lucide-react';
 
 interface EventData {
   _id: string;
@@ -32,17 +37,21 @@ interface OrgStats {
 }
 
 const OrganizerDashboard: React.FC = () => {
+  const { user, login } = useAuth();
+  const [profile, setProfile] = useState<any>(null);
   const [events, setEvents] = useState<EventData[]>([]);
   const [stats, setStats] = useState<OrgStats | null>(null);
   const [monthlySales, setMonthlySales] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const { socket } = useRealTime();
 
+  const [isEditing, setIsEditing] = useState(false);
+  const [editName, setEditName] = useState('');
+
   // Attendee modal state
   const [attendeeEvent, setAttendeeEvent] = useState<EventData | null>(null);
   const [attendees, setAttendees] = useState<any[]>([]);
   const [attendeeLoading, setAttendeeLoading] = useState(false);
-
 
   const navigate = useNavigate();
 
@@ -53,12 +62,42 @@ const OrganizerDashboard: React.FC = () => {
       setEvents(data.events || []);
       setStats(data.stats || null);
       setMonthlySales(data.monthlySales || []);
+      
+      const profileData = await getOrganizerProfile();
+      setProfile(profileData);
+      setEditName(profileData.name);
     } catch {
-      toast.error('Failed to load organizer analytics');
+      toast.error('Failed to load organizer data');
     } finally {
       if (!isSilent) setLoading(false);
     }
   }, []);
+
+  const handleSaveProfile = async () => {
+    try {
+      const updated = await updateOrganizerProfile(editName);
+      setProfile(updated);
+      if (user) login({ ...user, name: updated.name });
+      toast.success('Profile updated!');
+      setIsEditing(false);
+    } catch {
+      toast.error('Failed to update profile');
+    }
+  };
+
+  const handleProfileUpload = async (file: File | null) => {
+    if (!file) return;
+    const formData = new FormData();
+    formData.append('profilePicture', file);
+    try {
+      const data = await updateProfilePicture(formData);
+      if (user) login({ ...user, ...data });
+      setProfile((prev: any) => ({ ...prev, profilePicture: data.profilePicture }));
+      toast.success('Profile picture updated!');
+    } catch {
+      toast.error('Failed to update profile picture');
+    }
+  };
 
   useEffect(() => {
     fetchDashboard();
@@ -115,6 +154,81 @@ const OrganizerDashboard: React.FC = () => {
   return (
     <div className="min-h-screen bg-slate-50 pt-24 pb-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-7xl mx-auto">
+
+        {/* Profile Card */}
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="glass p-8 rounded-[40px] mb-12 shadow-2xl shadow-indigo-100 border border-white/40"
+        >
+          <div className="flex flex-col md:flex-row items-center gap-10">
+            <div className="relative group">
+              <div className="w-32 h-32 rounded-full border-4 border-white shadow-2xl overflow-hidden bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white text-4xl font-black relative">
+                {profile?.profilePicture?.url ? (
+                  <img src={profile.profilePicture.url} className="w-full h-full object-cover" alt="" />
+                ) : profile?.name?.charAt(0)}
+                
+                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center cursor-pointer">
+                  <div className="relative w-full h-full">
+                    <ImageUploader 
+                      onImageSelect={handleProfileUpload}
+                      currentImage={profile?.profilePicture?.url}
+                      aspectRatio="square"
+                      label=""
+                    />
+                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none flex flex-col items-center gap-1">
+                      <Camera className="w-6 h-6 text-white" />
+                      <span className="text-[8px] font-black text-white uppercase tracking-widest text-center">Change</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex-1 text-center md:text-left">
+              {isEditing ? (
+                <div className="space-y-4 max-w-md">
+                   <div className="space-y-1">
+                    <label className="text-[10px] font-black text-indigo-600 uppercase tracking-widest pl-1 block text-left">Full Name</label>
+                    <input 
+                      type="text" 
+                      value={editName} 
+                      onChange={(e) => setEditName(e.target.value)}
+                      className="w-full px-5 py-3 rounded-2xl bg-white/50 backdrop-blur-sm border border-indigo-100 focus:border-indigo-500 outline-none transition-all font-bold"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-black text-indigo-600 uppercase tracking-widest pl-1 block text-left">Email Address</label>
+                    <input 
+                      type="email" 
+                      value={profile?.email} 
+                      disabled
+                      className="w-full px-5 py-3 rounded-2xl bg-gray-100/50 backdrop-blur-sm border border-gray-200 outline-none transition-all font-bold cursor-not-allowed text-gray-400"
+                    />
+                  </div>
+                  <div className="flex justify-center md:justify-start gap-3 pt-2">
+                    <button onClick={handleSaveProfile} className="flex items-center gap-2 px-6 py-3 bg-indigo-600 text-white rounded-2xl font-bold hover:bg-indigo-700 transition-all shadow-lg active:scale-95">
+                      <Save className="w-4 h-4" /> Save
+                    </button>
+                    <button onClick={() => setIsEditing(false)} className="flex items-center gap-2 px-6 py-3 bg-white text-gray-600 border border-gray-100 rounded-2xl font-bold hover:bg-gray-50 transition-all active:scale-95">
+                      <CloseIcon className="w-4 h-4" /> Cancel
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  <div className="flex items-center justify-center md:justify-start gap-4">
+                    <h1 className="text-3xl font-black text-gray-900 tracking-tight">{profile?.name || 'Organizer'}</h1>
+                    <button onClick={() => setIsEditing(true)} className="p-2 hover:bg-indigo-50 text-indigo-500 rounded-xl transition-all bg-white border border-gray-100 shadow-sm">
+                      <Edit3 className="w-4 h-4" />
+                    </button>
+                  </div>
+                  <p className="text-gray-400 font-medium">{profile?.email}</p>
+                </div>
+              )}
+            </div>
+          </div>
+        </motion.div>
 
         {/* Header */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-12">
