@@ -227,80 +227,39 @@ const cancelEvent = async (req, res) => {
       skipped: 0
     };
 
-    // Group tickets by user to send batch notifications/emails
-    const userTicketsMap = new Map();
-
+    // Identify unique payment intents to avoid redundant refunds
+    const uniquePaymentIntents = new Set();
     for (const ticket of tickets) {
-      if (ticket.refundStatus === 'refunded') {
-        refundResults.skipped++;
-        continue;
-      }
-
-      let paymentIntentId = ticket.paymentIntentId;
-
-      // Fallback for older tickets: find payment intent from Transaction
-      if (!paymentIntentId) {
-        const transaction = await Transaction.findOne({ 
-          event: event._id, 
-          user: ticket.user._id,
-          status: 'succeeded' 
-        });
-        if (transaction) {
-          paymentIntentId = transaction.stripePaymentIntentId;
-        }
-      }
-
-      if (paymentIntentId) {
-        try {
-          await stripe.refunds.create({ payment_intent: paymentIntentId });
-          
-          ticket.refundStatus = 'refunded';
-          ticket.isValid = false;
-          await ticket.save();
-          
-          refundResults.refunded++;
-
-          // Track users for notification
-          if (!userTicketsMap.has(ticket.user._id.toString())) {
-            userTicketsMap.set(ticket.user._id.toString(), {
-              user: ticket.user,
-              tickets: []
+      if (ticket.refundStatus !== 'refunded') {
+        let pi = ticket.paymentIntentId;
+        if (!pi) {
+            const transaction = await Transaction.findOne({ 
+                event: event._id, 
+                user: ticket.user._id,
+                status: 'succeeded' 
             });
-          }
-          userTicketsMap.get(ticket.user._id.toString()).tickets.push(ticket);
-
-        } catch (stripeError) {
-          console.error(`Refund failed for ticket ${ticket._id}:`, stripeError.message);
-          refundResults.failed++;
+            if (transaction) pi = transaction.stripePaymentIntentId;
         }
+        if (pi) uniquePaymentIntents.add(pi);
       } else {
-        console.warn(`No payment intent found for ticket ${ticket._id}`);
+        refundResults.skipped++;
+      }
+    }
+
+    console.log(`🔍 Found ${uniquePaymentIntents.size} unique payment intents to refund.`);
+
+    for (const pi of uniquePaymentIntents) {
+      try {
+        await stripe.refunds.create({ payment_intent: pi });
+        refundResults.refunded++;
+      } catch (stripeError) {
+        console.error(`Refund failed for PI ${pi}:`, stripeError.message);
         refundResults.failed++;
       }
     }
 
-    // Send notifications and emails
-    const recipientIds = Array.from(userTicketsMap.keys());
-    if (recipientIds.length > 0) {
-      await notifyMany(recipientIds, {
-        type: 'event_update',
-        title: 'Event Cancelled & Refunded',
-        message: `The event "${event.title}" has been cancelled. Your refund has been processed.`,
-        event: event._id
-      });
-
-      // Send emails
-      for (const userData of userTicketsMap.values()) {
-        try {
-          await sendRefundEmail(userData.user, event);
-        } catch (emailError) {
-          console.error(`Email failed for user ${userData.user.email}:`, emailError.message);
-        }
-      }
-    }
-
-    // Broadcast via socket
-    broadcastEventUpdate({ ...event.toObject(), action: 'cancelled' });
+    // Broadcast event cancellation (the webhook will handle individual booking rollbacks)
+    broadcastEventUpdate(event.toObject(), 'cancelled');
 
     res.json({ 
       message: 'Event cancelled and refunds processed', 

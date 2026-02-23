@@ -9,6 +9,7 @@ import ImageUploader from '../components/common/ImageUploader';
 import Skeleton from '../components/common/Skeleton';
 import { updateProfilePicture } from '../api/userApi';
 import { toast } from 'sonner';
+import { useRealTime } from '../hooks/useRealTime';
 
 const TABS = [
   { id: 'upcoming', label: 'Upcoming Events', icon: Clock },
@@ -23,6 +24,7 @@ const UserDashboard: React.FC = () => {
   const [totalSpend, setTotalSpend] = useState(0);
   const [totalBookings, setTotalBookings] = useState(0);
   const [loading, setLoading] = useState(true);
+  const { socket } = useRealTime();
   
   const [isEditing, setIsEditing] = useState(false);
   const [editData, setEditData] = useState({ name: user?.name || '', email: user?.email || '' });
@@ -82,6 +84,24 @@ const UserDashboard: React.FC = () => {
     const interval = setInterval(() => fetchTickets(), 3000);
     return () => clearInterval(interval);
   }, [hasPending, fetchTickets]);
+
+  // Real-time socket updates
+  useEffect(() => {
+    if (!socket) return;
+
+    const handleUpdate = () => {
+      fetchDashboard(false); // Refresh dashboard stats/lists silently
+      fetchTickets(); // Refresh ticket status
+    };
+
+    socket.on('event:updated', handleUpdate);
+    socket.on('booking:updated', handleUpdate); // Assuming we might add this later
+
+    return () => {
+      socket.off('event:updated', handleUpdate);
+      socket.off('booking:updated', handleUpdate);
+    };
+  }, [socket, fetchDashboard, fetchTickets]);
 
   const handleProfileUpload = async (file: File | null) => {
     if (!file) return;

@@ -393,7 +393,8 @@ const getOrganizerDashboard = async (req, res) => {
         {
           $match: {
             'eventDoc.organizer': organizerId,
-            paymentStatus: 'paid'
+            paymentStatus: 'paid',
+            refundStatus: 'none'
           }
         },
         {
@@ -414,7 +415,7 @@ const getOrganizerDashboard = async (req, res) => {
         $match: { 
           event: { $in: events.map(e => e._id) },
           paymentStatus: 'paid',
-          refundStatus: { $ne: 'completed' }
+          refundStatus: 'none'
         } 
       },
       {
@@ -466,13 +467,13 @@ const getEventAttendees = async (req, res) => {
     const skip = (Number(page) - 1) * Number(limit);
 
     const [bookings, total] = await Promise.all([
-      BookingModel.find({ event: id, paymentStatus: 'paid' })
+      BookingModel.find({ event: id, paymentStatus: 'paid', refundStatus: 'none' })
         .populate('user', 'name email createdAt')
         .sort('-createdAt')
         .skip(skip)
         .limit(Number(limit))
         .lean(),
-      BookingModel.countDocuments({ event: id, paymentStatus: 'paid' })
+      BookingModel.countDocuments({ event: id, paymentStatus: 'paid', refundStatus: 'none' })
     ]);
 
     const attendees = bookings

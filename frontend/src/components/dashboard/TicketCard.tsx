@@ -12,7 +12,7 @@ const TicketCard: React.FC<TicketCardProps> = ({ booking }) => {
   const [downloading, setDownloading] = React.useState(false);
   const { _id, event, quantity, totalAmount, paymentStatus, refundStatus, qrCode, createdAt } = booking;
   const isCancelled = event?.status === 'cancelled';
-  const isRefunded = refundStatus === 'completed' || refundStatus === 'refunded' || isCancelled;
+  const isRefunded = refundStatus === 'completed' || refundStatus === 'refunded' || paymentStatus === 'refunded' || isCancelled;
 
   const handleDownload = async () => {
     if (isRefunded) {
@@ -69,13 +69,15 @@ const TicketCard: React.FC<TicketCardProps> = ({ booking }) => {
                 <span className={`px-3 py-1 text-[10px] font-black uppercase tracking-widest rounded-full border ${
                     paymentStatus === 'paid' 
                     ? 'bg-emerald-50 text-emerald-600 border-emerald-100' 
+                    : paymentStatus === 'refunded'
+                    ? 'bg-rose-50 text-rose-600 border-rose-100'
                     : 'bg-amber-50 text-amber-600 border-amber-100'
                 }`}>
-                    {paymentStatus === 'paid' ? 'Confirmed Booking' : 'Pending Payment'}
+                    {paymentStatus === 'paid' ? 'Confirmed Booking' : paymentStatus === 'refunded' ? 'Refunded' : 'Pending Payment'}
                 </span>
-                {isRefunded && (
+                {isCancelled && !isRefunded && (
                     <span className="px-3 py-1 text-[10px] font-black uppercase tracking-widest rounded-full border bg-rose-50 text-rose-600 border-rose-100">
-                        {isCancelled ? 'Event Cancelled' : 'Full Refunded'}
+                        Event Cancelled
                     </span>
                 )}
             </div>

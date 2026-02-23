@@ -82,11 +82,12 @@ const sendSocketNotification = (userId, notification) => {
 };
 
 /**
- * Broadcast an event create/update/delete to ALL connected clients.
- * @param {Object} event - The event object with an `action` field: 'created' | 'updated' | 'deleted'
+ * Broadcast an event update to ALL connected clients.
+ * @param {Object} event - The event object
+ * @param {string} action - 'created' | 'updated' | 'deleted'
  */
-const broadcastEventUpdate = (event) => {
-  if (io) io.emit('event:updated', { event });
+const broadcastEventUpdate = (event, action = 'updated') => {
+  if (io) io.emit('event:updated', { event, action });
 };
 
 /**

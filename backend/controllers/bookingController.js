@@ -8,7 +8,7 @@ const nodemailer = require('nodemailer');
 const PDFDocument = require('pdfkit');
 const crypto = require('crypto');
 const { createNotification } = require('../services/notificationService');
-const { broadcastAttendeeCount } = require('../config/socket');
+const { broadcastAttendeeCount, broadcastEventUpdate } = require('../config/socket');
 
 const initiateBooking = async (req, res) => {
   try {
@@ -257,38 +257,14 @@ const stripeWebhook = async (req, res) => {
     }
   } 
   
-  if (stripeEvent.type === 'charge.refunded') {
-    const charge = stripeEvent.data.object;
-    console.log('🔄 REFUND: Processing charge.refunded for PI:', charge.payment_intent);
-
+  if (stripeEvent.type === 'charge.refunded' || stripeEvent.type === 'payment_intent.amount_refunded') {
+    const object = stripeEvent.data.object;
+    const paymentIntentId = object.payment_intent || object.id;
+    console.log(`🔄 REFUND: Processing ${stripeEvent.type} for PI:`, paymentIntentId);
+    
     try {
-      const transaction = await Transaction.findOneAndUpdate(
-        { stripePaymentIntentId: charge.payment_intent },
-        { status: 'refunded' },
-        { new: true }
-      );
-
-      if (transaction) {
-        await Booking.findByIdAndUpdate(transaction.booking, { 
-          refundStatus: 'completed',
-          paymentStatus: 'failed'
-        });
-
-        await Ticket.updateMany(
-          { paymentId: transaction.stripeSessionId },
-          { isValid: false }
-        );
-
-        await createNotification({
-          recipient: transaction.user,
-          type: 'event_update',
-          title: 'Refund Processed',
-          message: `Your refund for the event has been processed successfully.`,
-          event: transaction.event
-        });
-
-        console.log('✅ SUCCESS: Refund status updated across models');
-      }
+      await processRefundRollback(paymentIntentId);
+      console.log('✅ SUCCESS: Refund rollback completed');
     } catch (refError) {
       console.error('❌ REFUND ERROR:', refError.message);
     }
@@ -296,6 +272,93 @@ const stripeWebhook = async (req, res) => {
 
   // Acknowledge other event types to avoid Stripe retries
   res.status(200).json({ received: true });
+};
+
+// Helper to rollback state on refund
+const processRefundRollback = async (paymentIntentId) => {
+  // 1. Find and update Transaction (idempotency check)
+  const transaction = await Transaction.findOne({ stripePaymentIntentId: paymentIntentId }).populate('user');
+  
+  if (!transaction) {
+    console.warn(`No transaction found for PI: ${paymentIntentId} during rollback`);
+    return;
+  }
+
+  if (transaction.status === 'refunded') {
+    console.log(`ℹ️ IDEMPOTENCY: Transaction ${paymentIntentId} already marked as refunded.`);
+    return;
+  }
+
+  // Mark transaction as refunded
+  transaction.status = 'refunded';
+  await transaction.save();
+
+  // 2. Update Booking
+  const booking = await Booking.findByIdAndUpdate(transaction.booking, { 
+    refundStatus: 'completed',
+    paymentStatus: 'refunded' 
+  }, { new: true });
+
+  if (!booking) {
+      console.error(`❌ CRITICAL: Booking not found for transaction ${transaction._id}`);
+  }
+
+  // 3. Invalidate Tickets
+  await Ticket.updateMany(
+    { paymentIntentId: paymentIntentId },
+    { isValid: false, refundStatus: 'refunded' }
+  );
+
+  // 4. Rollback Event Capacity (Atomic update)
+  if (booking) {
+    const event = await Event.findByIdAndUpdate(
+      transaction.event,
+      { $inc: { soldTickets: -booking.quantity } },
+      { new: true }
+    );
+    if (event) {
+        console.log(`✅ EVENT CAPACITY RESTORED: ${event.title}`);
+        console.log(`   Previous sold: ${event.soldTickets + booking.quantity} -> New sold: ${event.soldTickets}`);
+        console.log(`   Available: ${event.ticketQuantity - event.soldTickets}`);
+        
+        // Broadcast live updates
+        broadcastAttendeeCount(event._id, event.soldTickets);
+        broadcastEventUpdate(event.toObject(), 'updated');
+        
+        // 5. Notifications
+        await createNotification({
+            recipient: transaction.user._id,
+            type: 'event_update',
+            title: 'Refund Processed 💰',
+            message: `Your refund for "${event.title}" has been processed successfully. ${booking.quantity} seats have been released.`,
+            event: transaction.event._id
+        });
+
+        // 6. Send Email
+        await sendRefundConfirmationEmail(transaction.user, event, booking);
+    }
+  }
+};
+
+const sendRefundConfirmationEmail = async (user, event, booking) => {
+    try {
+        const transporter = nodemailer.createTransport({
+            service: 'gmail',
+            auth: {
+                user: process.env.EMAIL_USER,
+                pass: process.env.EMAIL_PASS,
+            },
+        });
+
+        await transporter.sendMail({
+            from: process.env.EMAIL_USER,
+            to: user.email,
+            subject: 'Refund Confirmation - EventBoost Pro',
+            text: `Hi ${user.name},\n\nYour refund for "${event.title}" has been processed successfully. The amount of $${booking.totalAmount} has been returned to your original payment method.\n\nEvent: ${event.title}\nQuantity: ${booking.quantity}\n\nWe hope to see you at another event soon!\n\nBest regards,\nEventBoost Pro Team`
+        });
+    } catch (error) {
+        console.error('Error sending refund email:', error);
+    }
 };
 
 const sendTicketEmail = async (user, event, tickets) => {
@@ -539,16 +602,26 @@ const refundBooking = async (req, res) => {
 const getMyDashboard = async (req, res) => {
   try {
     const now = new Date();
-    const bookings = await Booking.find({ user: req.user.id, paymentStatus: 'paid' })
+    const bookings = await Booking.find({ 
+      user: req.user.id, 
+      paymentStatus: { $in: ['paid', 'refunded'] } 
+    })
       .populate('event', 'title date location bannerImage ticketPrice category')
       .sort('-createdAt')
       .lean();
 
-    const upcoming = bookings.filter(b => b.event && new Date(b.event.date) >= now);
-    const past = bookings.filter(b => b.event && new Date(b.event.date) < now);
-    const totalSpend = bookings.reduce((acc, b) => acc + (b.totalAmount || 0), 0);
+    const upcoming = bookings.filter(b => b.event && new Date(b.event.date) >= now && b.paymentStatus === 'paid');
+    const past = bookings.filter(b => b.event && new Date(b.event.date) < now && b.paymentStatus === 'paid');
+    const totalSpend = bookings.reduce((acc, b) => {
+        return acc + (b.paymentStatus === 'paid' ? (b.totalAmount || 0) : 0);
+    }, 0);
 
-    res.json({ upcoming, past, totalSpend, totalBookings: bookings.length });
+    res.json({ 
+      upcoming, 
+      past, 
+      totalSpend, 
+      totalBookings: bookings.filter(b => b.paymentStatus === 'paid').length 
+    });
   } catch (error) {
     console.error('User dashboard error:', error);
     res.status(500).json({ message: 'Server error' });
