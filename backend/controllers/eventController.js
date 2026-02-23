@@ -136,6 +136,13 @@ const updateEvent = async (req, res) => {
     }
 
     const updateData = { ...req.body };
+
+    // Sanitize updateData: Prevent overwriting sensitive fields or fields that might cause casting errors
+    // (e.g., if frontend sends back populated objects)
+    delete updateData.organizer;
+    delete updateData.createdBy;
+    delete updateData.attendees;
+
     if (req.file) {
       // Delete old banner if exists
       if (event.bannerImage && event.bannerImage.public_id) {

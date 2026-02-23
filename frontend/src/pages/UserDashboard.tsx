@@ -16,7 +16,7 @@ const TABS = [
 ];
 
 const UserDashboard: React.FC = () => {
-  const { user } = useAuth();
+  const { user, login } = useAuth();
   const [tab, setTab] = useState<'upcoming' | 'past'>('upcoming');
   const [upcoming, setUpcoming] = useState([]);
   const [past, setPast] = useState([]);
@@ -33,9 +33,13 @@ const UserDashboard: React.FC = () => {
 
   const handleSaveProfile = async () => {
     try {
-      // Logic for updating name/email API call would go here
-      // For now, simulating success as the backend endpoint needs to be verified/implemented for name/email updates
-      await axios.put('/users/profile', editData);
+      const { data } = await axios.put('/users/profile', editData);
+      
+      // Update local storage and context state
+      if (user) {
+        login({ ...user, ...data });
+      }
+      
       toast.success('Profile updated successfully!');
       setIsEditing(false);
     } catch {
@@ -86,10 +90,14 @@ const UserDashboard: React.FC = () => {
     formData.append('profilePicture', file);
 
     try {
-      await updateProfilePicture(formData);
+      const data = await updateProfilePicture(formData);
+      
+      // Update local storage and context state
+      if (user) {
+        login({ ...user, ...data });
+      }
+
       toast.success('Profile picture updated!');
-      // Refresh logic or reload
-      window.location.reload(); 
     } catch (error: any) {
       toast.error('Failed to update profile picture');
     }

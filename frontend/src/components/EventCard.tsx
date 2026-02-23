@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Calendar, MapPin, Edit3, Trash2, ShieldCheck, Ticket } from 'lucide-react';
+import { Calendar, MapPin, Edit3, Trash2, ShieldCheck, Ticket, RefreshCw } from 'lucide-react';
 import { EventData } from '../api/eventApi';
 
 interface EventCardProps {
@@ -11,6 +11,7 @@ interface EventCardProps {
   isAdmin?: boolean;
   isRegistered?: boolean;
   onBuy?: (event: EventData) => void;
+  onCancel?: (id: string) => void;
 }
 
 const EventCard: React.FC<EventCardProps> = ({ 
@@ -20,20 +21,31 @@ const EventCard: React.FC<EventCardProps> = ({
   isOwner, 
   isAdmin,
   isRegistered,
-  onBuy
+  onBuy,
+  onCancel
 }) => {
   const isSoldOut = (event.soldTickets || 0) >= event.ticketQuantity;
+  const isCancelled = event.status === 'cancelled';
+
   return (
     <motion.div
-      whileHover={{ 
+      whileHover={!isCancelled ? { 
         y: -12,
         scale: 1.01,
         transition: { type: "spring", stiffness: 400, damping: 20 }
-      }}
-      className="group relative bg-white rounded-3xl overflow-hidden shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_20px_50px_rgba(99,102,241,0.1)] transition-all duration-500 border border-gray-100/50"
+      } : {}}
+      className={`group relative bg-white rounded-3xl overflow-hidden shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_20px_50px_rgba(99,102,241,0.1)] transition-all duration-500 border border-gray-100/50 ${isCancelled ? 'opacity-75 grayscale-[0.5]' : ''}`}
     >
+      {/* Cancelled Badge */}
+      {isCancelled && (
+        <div className="absolute top-4 left-4 z-20 bg-gray-900/90 backdrop-blur-md text-white text-[10px] font-black uppercase tracking-widest px-4 py-2 rounded-full shadow-xl border border-white/20 flex items-center gap-2">
+          <div className="w-2 h-2 rounded-full bg-rose-500 animate-pulse" />
+          Event Cancelled
+        </div>
+      )}
+
       {/* Featured Badge */}
-      {event.isFeatured && (
+      {event.isFeatured && !isCancelled && (
         <div className="absolute top-4 left-4 z-10 bg-rose-500 text-white text-[10px] font-black uppercase tracking-widest px-3 py-1.5 rounded-full shadow-lg shadow-rose-200 border border-rose-400 flex items-center gap-1.5">
           <ShieldCheck className="w-3.5 h-3.5" />
           Featured
@@ -152,21 +164,33 @@ const EventCard: React.FC<EventCardProps> = ({
           )}
 
           {(isOwner || isAdmin) && (
-            <div className="grid grid-cols-2 gap-3">
-              <button 
-                onClick={() => onEdit && onEdit(event)}
-                className="flex-1 bg-white border border-gray-200 text-gray-800 py-3.5 rounded-2xl font-black text-xs uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-slate-50 transition-all shadow-sm"
-              >
-                <Edit3 className="w-4 h-4 text-blue-500" />
-                Edit
-              </button>
-              <button 
-                onClick={() => onDelete && onDelete(event._id!)}
-                className="flex-1 bg-white border border-gray-200 text-gray-800 py-3.5 rounded-2xl font-black text-xs uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-rose-50 hover:text-rose-600 hover:border-rose-100 transition-all shadow-sm group/del"
-              >
-                <Trash2 className="w-4 h-4 text-rose-500 group-hover/del:scale-110 transition-transform" />
-                Remove
-              </button>
+            <div className="flex flex-col gap-3">
+              <div className="grid grid-cols-2 gap-3">
+                <button 
+                  onClick={() => onEdit && onEdit(event)}
+                  className="flex-1 bg-white border border-gray-200 text-gray-800 py-3.5 rounded-2xl font-black text-xs uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-slate-50 transition-all shadow-sm"
+                >
+                  <Edit3 className="w-4 h-4 text-blue-500" />
+                  Edit
+                </button>
+                <button 
+                  onClick={() => onDelete && onDelete(event._id!)}
+                  className="flex-1 bg-white border border-gray-200 text-gray-800 py-3.5 rounded-2xl font-black text-xs uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-rose-50 hover:text-rose-600 hover:border-rose-100 transition-all shadow-sm group/del"
+                >
+                  <Trash2 className="w-4 h-4 text-rose-500 group-hover/del:scale-110 transition-transform" />
+                  Remove
+                </button>
+              </div>
+              
+              {isAdmin && !isCancelled && (
+                <button 
+                  onClick={() => onCancel && onCancel(event._id!)}
+                  className="w-full bg-rose-500 text-white py-3.5 rounded-2xl font-black text-xs uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-rose-600 transition-all shadow-lg shadow-rose-100"
+                >
+                  <RefreshCw className="w-4 h-4" />
+                  Cancel Event & Refund Users
+                </button>
+              )}
             </div>
           )}
         </div>

@@ -3,6 +3,10 @@ const { CloudinaryStorage } = require('multer-storage-cloudinary');
 const cloudinary = require('../config/cloudinary');
 
 // Configure Cloudinary Storage
+if (!cloudinary.config().api_key) {
+  console.error('ERROR: Cloudinary is not configured in uploadMiddleware!');
+}
+
 const storage = new CloudinaryStorage({
   cloudinary: cloudinary,
   params: async (req, file) => {

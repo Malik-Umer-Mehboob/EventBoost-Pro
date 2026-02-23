@@ -24,6 +24,7 @@ export interface EventData {
     name: string;
   };
   attendees?: string[];
+  status?: 'active' | 'cancelled';
 }
 
 export const getCategories = async () => {

@@ -10,6 +10,7 @@ import EventCard from '../components/EventCard';
 import EventFilters from '../components/events/EventFilters';
 import BookingModal from '../components/bookings/BookingModal';
 import Skeleton from '../components/common/Skeleton';
+import { cancelEventAdmin } from '../api/adminApi';
 
 const EventList: React.FC = () => {
   const [events, setEvents] = useState<EventData[]>([]);
@@ -32,6 +33,23 @@ const EventList: React.FC = () => {
     }
     setSelectedEvent(event);
     setIsBookingModalOpen(true);
+  };
+
+  const handleCancelEvent = async (id: string) => {
+    if (!window.confirm('Are you sure you want to cancel this event? This will refund ALL tickets automatically and cannot be undone.')) {
+        return;
+    }
+
+    try {
+        const response = await cancelEventAdmin(id);
+        toast.success(response.message || 'Event cancelled successfully');
+        // socket update will handle the UI refresh if implemented on backend
+        // but let's update local state just in case
+        setEvents(prev => prev.map(e => e._id === id ? { ...e, status: 'cancelled' } : e));
+    } catch (error) {
+        console.error('Failed to cancel event:', error);
+        toast.error('Failed to cancel event and process refunds');
+    }
   };
 
   useEffect(() => {
@@ -152,6 +170,7 @@ const EventList: React.FC = () => {
                   <EventCard 
                     event={event} 
                     onBuy={handleBuyTicket}
+                    onCancel={handleCancelEvent}
                     isOwner={user?._id === (event.organizer?._id || event.createdBy?._id)}
                     isAdmin={user?.role === 'admin'}
                   />

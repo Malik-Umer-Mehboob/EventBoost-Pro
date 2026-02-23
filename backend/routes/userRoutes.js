@@ -2,7 +2,12 @@ const express = require('express');
 const router = express.Router();
 const { protect, authorize } = require('../middleware/authMiddleware');
 const upload = require('../middleware/uploadMiddleware');
-const { updateProfilePicture, getUserProfile } = require('../controllers/userController');
+const { updateProfilePicture, getUserProfile, updateProfile } = require('../controllers/userController');
+
+// @desc    Update User Profile (name/email)
+// @route   PUT /api/users/profile
+// @access  Private
+router.put('/profile', protect, updateProfile);
 
 // @desc    Get User Profile
 // @route   GET /api/users/profile

@@ -32,6 +32,14 @@ const ticketSchema = new mongoose.Schema(
       type: Boolean,
       default: true,
     },
+    paymentIntentId: {
+      type: String,
+    },
+    refundStatus: {
+      type: String,
+      enum: ['none', 'refunded'],
+      default: 'none',
+    },
   },
   {
     timestamps: true,

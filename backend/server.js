@@ -1,8 +1,7 @@
-const express = require('express');
 const dotenv = require('dotenv');
-
-// Load config first
 dotenv.config();
+
+const express = require('express');
 
 const cors = require('cors');
 const connectDB = require('./config/db');
@@ -35,7 +34,7 @@ app.use(cors());
 
 // Dedicated Stripe Webhook Route (MUST be before express.json)
 const { stripeWebhook } = require('./controllers/bookingController');
-app.post('/webhook', express.raw({ type: 'application/json' }), stripeWebhook);
+app.post('/api/webhooks/stripe', express.raw({ type: 'application/json' }), stripeWebhook);
 
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: false }));

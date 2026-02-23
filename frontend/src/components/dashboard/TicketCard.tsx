@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Calendar, MapPin, QrCode, Download, ExternalLink, Loader2 } from 'lucide-react';
+import { Calendar, MapPin, QrCode, Download, ExternalLink, Loader2, X } from 'lucide-react';
 import axios from '../../api/axios';
 import { toast } from 'sonner';
 
@@ -10,9 +10,15 @@ interface TicketCardProps {
 
 const TicketCard: React.FC<TicketCardProps> = ({ booking }) => {
   const [downloading, setDownloading] = React.useState(false);
-  const { _id, event, quantity, totalAmount, paymentStatus, qrCode, createdAt } = booking;
+  const { _id, event, quantity, totalAmount, paymentStatus, refundStatus, qrCode, createdAt } = booking;
+  const isCancelled = event?.status === 'cancelled';
+  const isRefunded = refundStatus === 'completed' || refundStatus === 'refunded' || isCancelled;
 
   const handleDownload = async () => {
+    if (isRefunded) {
+        toast.error('This booking has been refunded. Tickets are no longer valid.');
+        return;
+    }
     if (paymentStatus !== 'paid') {
       toast.error('Payment is pending. Tickets are only available after successful payment.');
       return;
@@ -54,18 +60,25 @@ const TicketCard: React.FC<TicketCardProps> = ({ booking }) => {
     <motion.div
       initial={{ opacity: 0, scale: 0.95 }}
       animate={{ opacity: 1, scale: 1 }}
-      className="glass rounded-3xl overflow-hidden flex flex-col md:flex-row shadow-xl border border-white/20"
+      className={`glass rounded-3xl overflow-hidden flex flex-col md:flex-row shadow-xl border border-white/20 ${isRefunded ? 'opacity-75 grayscale-[0.5]' : ''}`}
     >
       {/* Left: Event Info */}
       <div className="flex-1 p-8 space-y-4">
-        <div className="flex items-center justify-between">
-            <span className={`px-3 py-1 text-[10px] font-black uppercase tracking-widest rounded-full border ${
-                paymentStatus === 'paid' 
-                ? 'bg-emerald-50 text-emerald-600 border-emerald-100' 
-                : 'bg-amber-50 text-amber-600 border-amber-100'
-            }`}>
-                {paymentStatus === 'paid' ? 'Confirmed Booking' : 'Pending Payment'}
-            </span>
+        <div className="flex items-center justify-between flex-wrap gap-2">
+            <div className="flex gap-2">
+                <span className={`px-3 py-1 text-[10px] font-black uppercase tracking-widest rounded-full border ${
+                    paymentStatus === 'paid' 
+                    ? 'bg-emerald-50 text-emerald-600 border-emerald-100' 
+                    : 'bg-amber-50 text-amber-600 border-amber-100'
+                }`}>
+                    {paymentStatus === 'paid' ? 'Confirmed Booking' : 'Pending Payment'}
+                </span>
+                {isRefunded && (
+                    <span className="px-3 py-1 text-[10px] font-black uppercase tracking-widest rounded-full border bg-rose-50 text-rose-600 border-rose-100">
+                        {isCancelled ? 'Event Cancelled' : 'Full Refunded'}
+                    </span>
+                )}
+            </div>
             <span className="text-gray-400 text-xs font-medium">
                 Booked on {new Date(createdAt).toLocaleDateString()}
             </span>
@@ -111,7 +124,11 @@ const TicketCard: React.FC<TicketCardProps> = ({ booking }) => {
         <div className="absolute bottom-0 left-0 -translate-x-1/2 translate-y-1/2 w-6 h-6 bg-white rounded-full border border-gray-200" />
 
         <div className="p-3 bg-white rounded-2xl shadow-inner border border-gray-100">
-            {qrCode ? (
+            {isRefunded ? (
+                <div className="w-32 h-32 flex items-center justify-center bg-gray-50 rounded-xl border-2 border-dashed border-gray-200">
+                    <X className="w-12 h-12 text-gray-300" />
+                </div>
+            ) : qrCode ? (
                 <img src={qrCode} alt="Ticket QR" className="w-32 h-32" />
             ) : (
                 <QrCode className="w-32 h-32 text-gray-200" />
@@ -121,11 +138,11 @@ const TicketCard: React.FC<TicketCardProps> = ({ booking }) => {
         <div className="flex flex-col gap-2 w-full">
             <button 
                 onClick={handleDownload}
-                disabled={downloading || paymentStatus !== 'paid'}
+                disabled={downloading || paymentStatus !== 'paid' || isRefunded}
                 className="w-full py-2 px-4 glass text-indigo-600 font-bold text-xs rounded-xl flex items-center justify-center gap-2 hover:bg-white transition-all disabled:opacity-50 disabled:cursor-not-allowed"
             >
                 {downloading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
-                PDF Ticket
+                {isRefunded ? 'Refunded' : 'PDF Ticket'}
             </button>
             <button className="w-full py-2 px-4 text-gray-500 font-bold text-xs rounded-xl flex items-center justify-center gap-2 hover:text-indigo-600 transition-all">
                 <ExternalLink className="w-4 h-4" />

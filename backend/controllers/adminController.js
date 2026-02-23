@@ -2,9 +2,12 @@ const User = require('../models/User');
 const Event = require('../models/Event');
 const Booking = require('../models/Booking');
 const Transaction = require('../models/Transaction');
+const Ticket = require('../models/Ticket');
 const bcrypt = require('bcryptjs');
-const { broadcastEmergencyAlert } = require('../config/socket');
-const { notifyMany } = require('../services/notificationService');
+const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
+const nodemailer = require('nodemailer');
+const { broadcastEmergencyAlert, broadcastEventCancellation } = require('../config/socket');
+const { notifyMany, createNotification } = require('../services/notificationService');
 
 // @desc    Create a new Organizer
 // @route   POST /api/admin/create-organizer
@@ -195,9 +198,154 @@ const broadcastEmergency = async (req, res) => {
   }
 };
 
+// @desc    Cancel an event and refund all tickets
+// @route   PUT /api/admin/events/:id/cancel
+// @access  Private/Admin
+const cancelEvent = async (req, res) => {
+  try {
+    const event = await Event.findById(req.params.id);
+
+    if (!event) {
+      return res.status(404).json({ message: 'Event not found' });
+    }
+
+    if (event.status === 'cancelled') {
+      return res.status(400).json({ message: 'Event is already cancelled' });
+    }
+
+    // Update event status
+    event.status = 'cancelled';
+    await event.save();
+
+    // Find all tickets for this event
+    const tickets = await Ticket.find({ event: event._id }).populate('user');
+
+    const refundResults = {
+      total: tickets.length,
+      refunded: 0,
+      failed: 0,
+      skipped: 0
+    };
+
+    // Group tickets by user to send batch notifications/emails
+    const userTicketsMap = new Map();
+
+    for (const ticket of tickets) {
+      if (ticket.refundStatus === 'refunded') {
+        refundResults.skipped++;
+        continue;
+      }
+
+      let paymentIntentId = ticket.paymentIntentId;
+
+      // Fallback for older tickets: find payment intent from Transaction
+      if (!paymentIntentId) {
+        const transaction = await Transaction.findOne({ 
+          event: event._id, 
+          user: ticket.user._id,
+          status: 'succeeded' 
+        });
+        if (transaction) {
+          paymentIntentId = transaction.stripePaymentIntentId;
+        }
+      }
+
+      if (paymentIntentId) {
+        try {
+          await stripe.refunds.create({ payment_intent: paymentIntentId });
+          
+          ticket.refundStatus = 'refunded';
+          ticket.isValid = false;
+          await ticket.save();
+          
+          refundResults.refunded++;
+
+          // Track users for notification
+          if (!userTicketsMap.has(ticket.user._id.toString())) {
+            userTicketsMap.set(ticket.user._id.toString(), {
+              user: ticket.user,
+              tickets: []
+            });
+          }
+          userTicketsMap.get(ticket.user._id.toString()).tickets.push(ticket);
+
+        } catch (stripeError) {
+          console.error(`Refund failed for ticket ${ticket._id}:`, stripeError.message);
+          refundResults.failed++;
+        }
+      } else {
+        console.warn(`No payment intent found for ticket ${ticket._id}`);
+        refundResults.failed++;
+      }
+    }
+
+    // Send notifications and emails
+    const recipientIds = Array.from(userTicketsMap.keys());
+    if (recipientIds.length > 0) {
+      await notifyMany(recipientIds, {
+        type: 'event_update',
+        title: 'Event Cancelled & Refunded',
+        message: `The event "${event.title}" has been cancelled. Your refund has been processed.`,
+        event: event._id
+      });
+
+      // Send emails
+      for (const userData of userTicketsMap.values()) {
+        try {
+          await sendRefundEmail(userData.user, event);
+        } catch (emailError) {
+          console.error(`Email failed for user ${userData.user.email}:`, emailError.message);
+        }
+      }
+    }
+
+    // Broadcast via socket
+    if (broadcastEventCancellation) {
+        broadcastEventCancellation(event._id);
+    } else {
+        broadcastEmergencyAlert({ 
+            title: 'Event Cancelled', 
+            message: `The event "${event.title}" has been cancelled and refunds processed.`,
+            eventId: event._id 
+        }, [`event_${event._id}`]);
+    }
+
+    res.json({ 
+      message: 'Event cancelled and refunds processed', 
+      results: refundResults 
+    });
+
+  } catch (error) {
+    console.error('Cancel event error:', error);
+    res.status(500).json({ message: 'Server error during event cancellation' });
+  }
+};
+
+const sendRefundEmail = async (user, event) => {
+  try {
+    const transporter = nodemailer.createTransport({
+      service: 'gmail',
+      auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS,
+      },
+    });
+
+    await transporter.sendMail({
+      from: process.env.EMAIL_USER,
+      to: user.email,
+      subject: `Refund Processed: ${event.title} has been cancelled`,
+      text: `Hi ${user.name},\n\nWe're sorry to inform you that the event "${event.title}" has been cancelled.\n\nA full refund for your tickets has been processed via Stripe. Please allow 5-10 business days for the funds to appear in your account.\n\nEvent Details:\nDate: ${new Date(event.date).toLocaleString()}\nLocation: ${event.location}\n\nWe apologize for any inconvenience.\n\nBest regards,\nThe EventBoost Pro Team`,
+    });
+  } catch (error) {
+    console.error('Error sending refund email:', error);
+  }
+};
+
 module.exports = {
   createOrganizer,
   getAdminDashboard,
   getAllTransactions,
-  broadcastEmergency
+  broadcastEmergency,
+  cancelEvent
 };
