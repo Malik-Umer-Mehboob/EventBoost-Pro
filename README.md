@@ -1,8 +1,8 @@
 # 🎟 EventBoost-Pro
 
-EventBoost-Pro is a **production-ready full-stack event management and ticketing platform** that allows organizers to create events, users to purchase tickets securely, and admins to manage the entire platform.
+EventBoost-Pro is a **production-ready full-stack event management and ticketing platform** that enables organizers to create events, users to purchase tickets securely, and admins to manage the entire platform efficiently.
 
-Built with **React (Frontend)**, **Node.js/Express (Backend)**, and **MongoDB Atlas**, the platform supports real-time notifications, secure payments, automatic refunds, and role-based access control.
+Built using **React (Frontend)**, **Node.js/Express (Backend)**, and **MongoDB Atlas**, the platform includes real-time alerts, secure payments, automatic refunds, email reminders, and role-based access control.
 
 ---
 
@@ -27,7 +27,7 @@ Built with **React (Frontend)**, **Node.js/Express (Backend)**, and **MongoDB At
 - Upload event banner images
 - Set ticket price & quantity
 - View attendees list
-- Send event reminders via email
+- Send manual email reminders to registered users
 - Share event via social media
 
 ---
@@ -35,76 +35,94 @@ Built with **React (Frontend)**, **Node.js/Express (Backend)**, and **MongoDB At
 ## 🛒 Ticket Purchase (User Side)
 
 - Browse & search events
-- View event details
+- View detailed event information
 - Secure ticket purchase via Stripe
-- Automatic ticket generation after payment
-- Ticket confirmation email (with PDF)
+- Automatic ticket creation after successful payment
+- Ticket confirmation email (with PDF attachment)
 - View purchased tickets in dashboard
 - Download ticket PDF anytime
 
 ---
 
-## 💳 Payment Integration
+## 💳 Payment & Refund System
 
+### Secure Payment Integration
 - Stripe Checkout integration
-- Secure payment verification
 - PaymentIntent stored in database
-- Prevent duplicate payments
+- Secure payment verification
+- Prevent duplicate ticket generation
 
----
-
-## 💰 Automatic Refund System
-
+### Automatic Refund System
 If an event is cancelled:
-
 - Admin changes event status to `cancelled`
 - System automatically:
   - Finds all purchased tickets
   - Triggers Stripe refund API
   - Updates ticket refund status
-  - Sends refund confirmation email to users
-- User dashboard shows:
-  - Ticket status: Refunded
-  - Refund processing notice
+  - Sends refund confirmation email
+- User dashboard shows refund status
 
 ---
 
-## 📢 Emergency Broadcast (Real-Time)
+## 📢 Notifications & Email Reminders
+
+### 📧 Email Reminders
+- Automatic reminder before event date (e.g., 24 hours before event)
+- Organizer can manually trigger reminder emails
+- Includes event details in email:
+  - Event name
+  - Date & time
+  - Location
+  - Ticket number
+
+### 🔔 In-App Notifications
+- Notification created when:
+  - Ticket purchased
+  - Event updated
+  - Event cancelled
+  - Refund processed
+- Notifications stored in database
+- Users can view notification history in dashboard
+- Real-time notification using Socket.io
+
+---
+
+## 🚨 Emergency Broadcast (Real-Time)
 
 Admin can send instant platform-wide alerts:
 
-- Event cancellation notice
-- System maintenance warning
-- Urgent announcements
+- Event cancellation
+- Security alerts
+- Maintenance announcements
 
-Powered by Socket.io for real-time updates.
-
-All connected users receive:
-- Instant red alert banner / toast notification
+Powered by Socket.io:
+- All connected users receive real-time alert banner
+- Red warning toast / modal display
 
 ---
 
-## 📊 Dashboards
+# 📊 Dashboards
 
-### 🛡 Admin Dashboard
-- Manage users
-- Manage organizers
+## 🛡 Admin Dashboard
+- Manage users & organizers
 - Cancel events
-- View ticket sales
-- View revenue statistics
+- Trigger refunds
 - Send emergency broadcasts
+- View revenue statistics
+- View ticket sales overview
 
-### 🎯 Organizer Dashboard
+## 🎯 Organizer Dashboard
 - Manage own events
-- View ticket sales per event
-- View attendee list
-- Track performance
+- View ticket sales
+- View attendees
+- Send event reminders
 
-### 👥 User Dashboard
+## 👥 User Dashboard
 - View purchased tickets
 - Download ticket PDF
 - View refund status
-- Track event history
+- View notification history
+- Track event participation
 
 ---
 
@@ -125,7 +143,7 @@ All connected users receive:
 - Passport.js (Google OAuth)
 - Socket.io (Real-Time)
 - Stripe API
-- Nodemailer
+- Nodemailer (Email System)
 
 ### Dev Tools
 - Nodemon
@@ -140,9 +158,10 @@ All connected users receive:
 - JWT protected routes
 - Role-based route protection
 - Secure Stripe payment verification
-- Environment variable protection
+- Automatic refund protection
+- Environment variables for sensitive data
 - Admin-only critical actions
-- Duplicate refund prevention
+
 
 ---
 
