@@ -27,7 +27,6 @@ Built using **React (Frontend)**, **Node.js/Express (Backend)**, and **MongoDB A
 - View and update personal information:
   - Name
   - Email
-  - Password
   - Profile picture
 - View purchased tickets and event history
 - Receive email reminders for upcoming events
@@ -37,7 +36,6 @@ Built using **React (Frontend)**, **Node.js/Express (Backend)**, and **MongoDB A
 - Update organizer information:
   - Name
   - Email
-  - Password
   - Profile picture / Logo
 - Manage events dashboard:
   - Create / Update / Delete events
@@ -162,6 +160,7 @@ Powered by Socket.io:
 - React + Vite
 - Tailwind CSS
 - Shadcn UI
+- Three.js
 - Lucide Icons
 - Axios
 
