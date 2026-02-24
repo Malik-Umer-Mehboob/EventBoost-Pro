@@ -53,7 +53,7 @@ const updateOrganizerProfile = async (req, res) => {
     const organizer = await User.findByIdAndUpdate(
       req.user.id,
       { name },
-      { new: true, runValidators: true }
+      { returnDocument: 'after', runValidators: true }
     ).select('-password');
 
     if (!organizer) {

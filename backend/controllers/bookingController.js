@@ -196,7 +196,7 @@ const stripeWebhook = async (req, res) => {
           $inc: { soldTickets: quantity },
           $addToSet: { attendees: userId }
         }, 
-        { new: true }
+        { returnDocument: 'after' }
       );
 
       if (!event) {
@@ -297,7 +297,7 @@ const processRefundRollback = async (paymentIntentId) => {
   const booking = await Booking.findByIdAndUpdate(transaction.booking, { 
     refundStatus: 'completed',
     paymentStatus: 'refunded' 
-  }, { new: true });
+  }, { returnDocument: 'after' });
 
   if (!booking) {
       console.error(`❌ CRITICAL: Booking not found for transaction ${transaction._id}`);
@@ -314,7 +314,7 @@ const processRefundRollback = async (paymentIntentId) => {
     const event = await Event.findByIdAndUpdate(
       transaction.event,
       { $inc: { soldTickets: -booking.quantity } },
-      { new: true }
+      { returnDocument: 'after' }
     );
     if (event) {
         console.log(`✅ EVENT CAPACITY RESTORED: ${event.title}`);

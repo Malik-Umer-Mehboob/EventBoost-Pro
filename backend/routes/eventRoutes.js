@@ -10,6 +10,7 @@ const {
   registerForEvent,
   getEventById,
   getCategories,
+  cancelEvent,
 } = require('../controllers/eventController');
 const { protect, authorize } = require('../middleware/authMiddleware');
 
@@ -29,5 +30,6 @@ router.get('/categories', getCategories);
 router.get('/:id', protect, getEventById);
 router.put('/:id', protect, authorize('admin', 'organizer'), upload.single('banner'), updateEvent);
 router.post('/:id/register', protect, authorize('user'), registerForEvent);
+router.patch('/:id/cancel', protect, authorize('admin', 'organizer'), cancelEvent);
 
 module.exports = router;

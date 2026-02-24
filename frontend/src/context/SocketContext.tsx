@@ -55,9 +55,10 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     });
 
     // Global Alert Listener
-    newSocket.on('emergency:alert', (payload: { title: string; message: string; eventId?: string }) => {
+    newSocket.on('emergency_alert', (payload: { title: string; content: string; eventId?: string }) => {
+      console.log('🚨 Received Emergency Alert:', payload);
       toast.error(payload.title, {
-        description: payload.message,
+        description: payload.content,
         duration: 10000,
         action: payload.eventId ? {
           label: 'View Event',

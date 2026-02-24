@@ -1,7 +1,11 @@
 const Event = require('../models/Event');
-const { notifyMany } = require('../services/notificationService');
+const { notifyMany, createNotification } = require('../services/notificationService');
 const { sendBatchEmails } = require('../services/emailService');
 const User = require('../models/User');
+const Booking = require('../models/Booking');
+const Transaction = require('../models/Transaction');
+const Ticket = require('../models/Ticket');
+const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 const { broadcastEventUpdate, broadcastEmergencyAlert } = require('../config/socket');
 
 const CATEGORIES = [
@@ -35,6 +39,17 @@ const createEvent = async (req, res) => {
     // Validate category
     if (!CATEGORIES.includes(category)) {
       return res.status(400).json({ message: 'Invalid category' });
+    }
+
+    // Check for duplicate event (same title, date, and organizer)
+    const duplicate = await Event.findOne({
+      title: title,
+      date: new Date(date),
+      organizer: req.user.id
+    });
+
+    if (duplicate) {
+      return res.status(400).json({ message: 'You have already created an event with this title and date.' });
     }
 
     let bannerData = {};
@@ -139,9 +154,20 @@ const updateEvent = async (req, res) => {
 
     // Sanitize updateData: Prevent overwriting sensitive fields or fields that might cause casting errors
     // (e.g., if frontend sends back populated objects)
+    // Prevent organizers from changing protected fields
     delete updateData.organizer;
     delete updateData.createdBy;
     delete updateData.attendees;
+    
+    // Status Logic: Only admins can manually set status to 'active'.
+    // If an organizer updates a cancelled event, it becomes 'resubmitted'.
+    let isResubmitted = false;
+    if (event.status === 'cancelled') {
+        updateData.status = 'resubmitted';
+        isResubmitted = true;
+    } else {
+        delete updateData.status; // Organizer cannot manually change status of active events
+    }
 
     if (req.file) {
       // Delete old banner if exists
@@ -160,6 +186,20 @@ const updateEvent = async (req, res) => {
 
     broadcastEventUpdate({ ...updatedEvent.toObject(), action: 'updated' });
     res.json(updatedEvent);
+
+    // Notify admins if resubmitted
+    if (isResubmitted) {
+      const admins = await User.find({ role: 'admin' }).select('_id');
+      if (admins.length > 0) {
+        await notifyMany(admins.map(a => a._id), {
+          type: 'event_update',
+          title: 'Event Resubmitted',
+          message: `Organizer has resubmitted "${updatedEvent.title}" for approval.`,
+          link: `/events/${updatedEvent._id}`,
+          event: updatedEvent._id
+        });
+      }
+    }
 
     // Notify registered attendees if there are any
     if (updatedEvent.attendees && updatedEvent.attendees.length > 0) {
@@ -239,6 +279,13 @@ const deleteEvent = async (req, res) => {
         event: event._id
       });
     }
+
+    // 3. Cascade Delete: Remove associated bookings and tickets
+    console.log(`🧹 Cascading delete for event ${event._id}...`);
+    await Promise.all([
+      Booking.deleteMany({ event: event._id }),
+      Ticket.deleteMany({ event: event._id })
+    ]);
 
     // Delete banner from Cloudinary if exists
     if (event.bannerImage && event.bannerImage.public_id) {
@@ -325,6 +372,12 @@ const sendAnnouncement = async (req, res) => {
 
     const attendees = await User.find({ _id: { $in: event.attendees } });
     const attendeeEmails = attendees.map(u => u.email);
+    
+    // Also include organizer email
+    const organizer = await User.findById(event.organizer);
+    if (organizer && !attendeeEmails.includes(organizer.email)) {
+      attendeeEmails.push(organizer.email);
+    }
 
     // Send Batch Emails
     await sendBatchEmails(attendeeEmails, {
@@ -353,10 +406,13 @@ const sendAnnouncement = async (req, res) => {
       sender: req.user.id
     });
 
-    // Broadcast live alert to users inside the event room
+    // Broadcast live alert to everyone in the event room, the organizer, and all attendees' personal rooms
+    const targetRooms = [`event_${event._id}`, `user_${req.user.id}`];
+    event.attendees.forEach(id => targetRooms.push(`user_${id}`));
+
     broadcastEmergencyAlert(
-      { title: `Announcement: ${title}`, message, eventId: event._id },
-      [`event_${event._id}`]
+      { title: `Announcement: ${title}`, content: message, eventId: event._id },
+      targetRooms
     );
 
     res.json({ message: 'Announcement sent to all attendees' });
@@ -370,7 +426,6 @@ const sendAnnouncement = async (req, res) => {
 // @route   GET /api/organizers/analytics
 // @access  Private/Organizer
 const mongoose = require('mongoose');
-const Booking = require('../models/Booking');
 
 const getOrganizerDashboard = async (req, res) => {
   try {
@@ -501,6 +556,117 @@ const getEventAttendees = async (req, res) => {
   }
 };
 
+// @desc    Cancel an event (Admin or Organizer-Owner)
+// @route   PATCH /api/events/:id/cancel
+// @access  Private (Admin/Organizer)
+const cancelEvent = async (req, res) => {
+  try {
+    const event = await Event.findById(req.params.id);
+
+    if (!event) {
+      return res.status(404).json({ message: 'Event not found' });
+    }
+
+    // Check authorization: Admin OR Organizer who owns the event
+    const organizerId = event.organizer || event.createdBy;
+    const isOwner = organizerId && organizerId.toString() === req.user.id;
+    const isAdmin = req.user.role === 'admin';
+
+    if (!isOwner && !isAdmin) {
+      return res.status(403).json({ message: 'Not authorized to cancel this event' });
+    }
+
+    if (event.status === 'cancelled') {
+        return res.status(400).json({ message: 'Event is already cancelled' });
+    }
+
+    event.status = 'cancelled';
+    await event.save();
+
+    res.json({ message: 'Event cancelled successfully. Refunds are being processed.', event });
+
+    // 1. Process Automatic Refunds via Stripe
+    const paidBookings = await Booking.find({ event: event._id, paymentStatus: 'paid' });
+    
+    if (paidBookings.length > 0) {
+      console.log(`💰 Initiating refunds for ${paidBookings.length} bookings...`);
+      
+      const refundResults = { succeeded: 0, failed: 0 };
+
+      for (const booking of paidBookings) {
+        try {
+          // Find transaction to get Payment Intent ID
+          const transaction = await Transaction.findOne({ 
+            booking: booking._id, 
+            status: 'succeeded' 
+          });
+
+          if (transaction && transaction.stripePaymentIntentId) {
+            await stripe.refunds.create({
+              payment_intent: transaction.stripePaymentIntentId,
+              reason: 'requested_by_customer', // Event cancellation
+              metadata: { eventId: event._id.toString(), bookingId: booking._id.toString() }
+            });
+            refundResults.succeeded++;
+          } else {
+            console.warn(`⚠️ No successful transaction found for booking ${booking._id}`);
+            refundResults.failed++;
+          }
+        } catch (refundError) {
+          console.error(`❌ Refund failed for booking ${booking._id}:`, refundError.message);
+          refundResults.failed++;
+        }
+      }
+      console.log(`✅ Refund process complete: ${refundResults.succeeded} successful, ${refundResults.failed} failed.`);
+    }
+
+    // 2. Notify registered attendees if there are any
+    if (event.attendees && event.attendees.length > 0) {
+      const attendees = await User.find({ _id: { $in: event.attendees } });
+      const attendeeEmails = attendees.map(u => u.email);
+
+      // 1. Send Batch Emails
+      await sendBatchEmails(attendeeEmails, {
+        subject: `Cancellation: ${event.title} has been cancelled`,
+        html: `
+          <h1>Event Cancelled</h1>
+          <p>Hi,</p>
+          <p>We regret to inform you that the event <strong>${event.title}</strong> has been cancelled.</p>
+          <p>If you purchased a ticket, a refund will be processed shortly.</p>
+          <a href="${process.env.FRONTEND_URL}/events/${event._id}">View Event Details</a>
+        `,
+        type: 'event_update',
+        eventId: event._id
+      });
+
+      // 2. Send In-App Notifications
+      await notifyMany(event.attendees, {
+        type: 'event_update',
+        title: 'Event Cancelled',
+        message: `"${event.title}" has been cancelled.`,
+        link: `/events/${event._id}`,
+        event: event._id
+      });
+
+      // 3. Broadcast live alert to everyone in the event room, the organizer, and all attendees' personal rooms
+      const targetRooms = [`event_${event._id}`, `user_${req.user.id}`];
+      event.attendees.forEach(id => targetRooms.push(`user_${id}`));
+
+      broadcastEmergencyAlert(
+        { 
+          title: 'Event Cancelled', 
+          content: `The event "${event.title}" has been cancelled by the organizer.`, 
+          eventId: event._id 
+        },
+        targetRooms
+      );
+    }
+  } catch (error) {
+    console.error('Error in cancelEvent:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
 module.exports = {
   createEvent,
   getAllEvents,
@@ -514,4 +680,5 @@ module.exports = {
   sendAnnouncement,
   getOrganizerDashboard,
   getEventAttendees,
+  cancelEvent,
 };

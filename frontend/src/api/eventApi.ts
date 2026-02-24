@@ -24,7 +24,7 @@ export interface EventData {
     name: string;
   };
   attendees?: string[];
-  status?: 'active' | 'cancelled';
+  status?: 'active' | 'cancelled' | 'resubmitted';
 }
 
 export const getCategories = async () => {
@@ -73,5 +73,15 @@ export const deleteEvent = async (id: string) => {
 
 export const registerForEvent = async (id: string) => {
   const { data } = await api.post(`/events/${id}/register`);
+  return data;
+};
+
+export const cancelEvent = async (id: string) => {
+  const { data } = await api.patch(`/events/${id}/cancel`);
+  return data;
+};
+
+export const approveEvent = async (id: string) => {
+  const { data } = await api.patch(`/admin/events/${id}/approve`);
   return data;
 };

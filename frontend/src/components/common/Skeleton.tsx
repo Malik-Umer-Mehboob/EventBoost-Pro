@@ -6,16 +6,17 @@ interface SkeletonProps {
   width?: string | number;
   height?: string | number;
   circle?: boolean;
+  borderRadius?: string | number;
 }
 
-const Skeleton: React.FC<SkeletonProps> = ({ className = '', width, height, circle }) => {
+const Skeleton: React.FC<SkeletonProps> = ({ className = '', width, height, circle, borderRadius }) => {
   return (
     <motion.div
       initial={{ opacity: 0.5 }}
       animate={{ opacity: [0.5, 0.8, 0.5] }}
       transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
       className={`bg-slate-200 relative overflow-hidden ${className} ${circle ? 'rounded-full' : 'rounded-xl'}`}
-      style={{ width, height }}
+      style={{ width, height, borderRadius: borderRadius ?? (circle ? '50%' : undefined) }}
     >
       <motion.div
         animate={{ x: ['-100%', '100%'] }}

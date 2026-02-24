@@ -38,7 +38,7 @@ const sendWithRetry = async (details, maxRetries = 3) => {
           type,
           event: eventId
         },
-        { upsert: true, new: true }
+        { upsert: true, returnDocument: 'after' }
       );
 
       return { success: true, messageId: info.messageId };
@@ -67,7 +67,7 @@ const sendWithRetry = async (details, maxRetries = 3) => {
       type,
       event: eventId
     },
-    { upsert: true, new: true }
+    { upsert: true, returnDocument: 'after' }
   );
 
   return { success: false, error: lastError.message };

@@ -47,7 +47,9 @@ const AdminDashboard = () => {
   // Emergency Broadcast Form
   const [broadcastTitle, setBroadcastTitle] = useState('');
   const [broadcastMessage, setBroadcastMessage] = useState('');
+  const [selectedEventId, setSelectedEventId] = useState('');
   const [isBroadcasting, setIsBroadcasting] = useState(false);
+  const [allEvents, setAllEvents] = useState<any[]>([]);
 
   const navigate = useNavigate();
   const { socket } = useRealTime();
@@ -60,6 +62,10 @@ const AdminDashboard = () => {
       setStats(data.stats);
       setRecentBookings(data.recentBookings || []);
       setMonthlySales(data.monthlySales || []);
+      
+      // Fetch events for broadcast targeting
+      const { data: eventsData } = await api.get('/events');
+      setAllEvents(eventsData || []);
     } catch {
       toast.error('Failed to load dashboard analytics');
     } finally {
@@ -96,11 +102,13 @@ const AdminDashboard = () => {
     try {
       await api.post('/admin/broadcast', {
         title: broadcastTitle,
-        message: broadcastMessage
+        content: broadcastMessage,
+        eventId: selectedEventId || null
       });
-      toast.success('Broadcast Sent!', { description: 'Platform-wide emergency alert has been sent.' });
+      toast.success('Broadcast Sent!', { description: selectedEventId ? 'Targeted event alert has been sent.' : 'Platform-wide emergency alert has been sent.' });
       setBroadcastTitle('');
       setBroadcastMessage('');
+      setSelectedEventId('');
     } catch {
       toast.error('Failed to send broadcast');
     } finally {
@@ -165,16 +173,32 @@ const AdminDashboard = () => {
             </div>
           </div>
           
-          <form onSubmit={handleBroadcast} className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <form onSubmit={handleBroadcast} className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <div className="md:col-span-1">
               <input
                 type="text"
-                placeholder="Alert Title (e.g., Event Cancellation)"
+                placeholder="Alert Title"
                 value={broadcastTitle}
                 onChange={(e) => setBroadcastTitle(e.target.value)}
                 className="w-full px-5 py-4 rounded-2xl border border-gray-100 focus:border-rose-300 outline-none transition-all shadow-sm"
                 required
               />
+            </div>
+            <div className="md:col-span-1">
+              <select
+                value={selectedEventId}
+                onChange={(e) => setSelectedEventId(e.target.value)}
+                className="w-full px-5 py-4 rounded-2xl border border-gray-100 focus:border-rose-300 outline-none transition-all shadow-sm bg-white"
+              >
+                <option value="">All Users (Platform-wide)</option>
+                <optgroup label="Target Specific Event">
+                  {allEvents.map((event: any) => (
+                    <option key={event._id} value={event._id}>
+                      {event.title}
+                    </option>
+                  ))}
+                </optgroup>
+              </select>
             </div>
             <div className="md:col-span-1">
               <input

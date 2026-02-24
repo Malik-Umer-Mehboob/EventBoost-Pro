@@ -101,15 +101,28 @@ const broadcastAttendeeCount = (eventId, soldTickets) => {
 
 /**
  * Broadcast an emergency/announcement alert.
- * @param {Object} payload - { title, message, eventId? }
+ * @param {Object} payload - { title, content, eventId? }
  * @param {string[]} targetRooms - Optional room names. Empty = platform-wide.
  */
 const broadcastEmergencyAlert = (payload, targetRooms = []) => {
-  if (!io) return;
+  if (!io) {
+    console.error('❌ Socket.io NOT initialized in broadcastEmergencyAlert');
+    return;
+  }
+  
+  console.log(`📣 Broadcasting Emergency Alert: "${payload.title}" to ${targetRooms.length === 0 ? 'ALL' : targetRooms.join(', ')}`);
+  
+  // Standardize payload for frontend: { title, content, eventId? }
+  const broadcastPayload = {
+    title: payload.title,
+    content: payload.content || payload.message,
+    eventId: payload.eventId
+  };
+
   if (targetRooms.length === 0) {
-    io.emit('emergency:alert', payload);
+    io.emit('emergency_alert', broadcastPayload);
   } else {
-    targetRooms.forEach(room => io.to(room).emit('emergency:alert', payload));
+    io.to(targetRooms).emit('emergency_alert', broadcastPayload);
   }
 };
 

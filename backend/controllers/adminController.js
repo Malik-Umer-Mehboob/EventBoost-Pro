@@ -163,31 +163,50 @@ const getAllTransactions = async (req, res) => {
 // @access  Private/Admin
 const broadcastEmergency = async (req, res) => {
   try {
-    const { title, message, eventId, targetRole } = req.body;
-    if (!title || !message) {
-      return res.status(400).json({ message: 'title and message are required' });
+    const { title, content, eventId, targetRole } = req.body;
+    if (!title || !content) {
+      return res.status(400).json({ message: 'title and content are required' });
     }
 
     // Determine target socket rooms
     const rooms = [];
     if (eventId) rooms.push(`event_${eventId}`);
     if (targetRole) rooms.push(`role_${targetRole}`);
+    
+    console.log('📡 Admin Broadcast Request:', { title, content, eventId, targetRole, rooms });
 
     // Broadcast via WebSocket (rooms=[] means platform-wide)
-    broadcastEmergencyAlert({ title, message, eventId: eventId || null }, rooms);
+    broadcastEmergencyAlert({ title, content, eventId: eventId || null }, rooms);
 
-    // Also persist as notifications for offline users
+    // Persist as notifications
+    const notificationData = {
+      type: 'announcement',
+      title,
+      message: content,
+      event: eventId || null,
+      sender: req.user._id,
+      idempotencyKeyBase: `emergency-${eventId || 'platform'}-${Date.now()}`
+    };
+
     if (eventId) {
       const bookings = await Booking.find({ event: eventId, paymentStatus: 'paid' }).select('user').lean();
       const recipientIds = bookings.map(b => b.user);
       if (recipientIds.length > 0) {
-        await notifyMany(recipientIds, {
-          type: 'announcement',
-          title,
-          message,
-          event: eventId,
-          idempotencyKeyBase: `emergency-${eventId}-${Date.now()}`
-        });
+        await notifyMany(recipientIds, notificationData);
+      }
+    } else {
+      // Platform-wide persistence: notify all active users
+      // Note: for very large apps, this would be a background job.
+      // For this scale, we'll notify all users in the DB
+      const users = await User.find({ role: { $ne: 'admin' } }).select('_id').lean();
+      const recipientIds = users.map(u => u._id);
+      if (recipientIds.length > 0) {
+        // Send in batches to avoid overwhelming memory/connections
+        const batchSize = 100;
+        for (let i = 0; i < recipientIds.length; i += batchSize) {
+          const batch = recipientIds.slice(i, i + batchSize);
+          await notifyMany(batch, notificationData);
+        }
       }
     }
 
@@ -272,6 +291,33 @@ const cancelEvent = async (req, res) => {
   }
 };
 
+// @desc    Approve a resubmitted event
+// @route   PATCH /api/admin/events/:id/approve
+// @access  Private/Admin
+const approveEvent = async (req, res) => {
+  try {
+    const event = await Event.findById(req.params.id);
+    if (!event) return res.status(404).json({ message: 'Event not found' });
+
+    event.status = 'active';
+    await event.save();
+
+    // Notify organizer
+    await createNotification({
+      user: event.organizer || event.createdBy,
+      type: 'event_update',
+      title: 'Event Approved',
+      message: `Your event "${event.title}" has been approved and is now active.`,
+      link: `/events/${event._id}`
+    });
+
+    broadcastEventUpdate({ ...event.toObject(), action: 'updated' });
+    res.json({ message: 'Event approved successfully', event });
+  } catch (error) {
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
 // @desc    Edit any event
 // @route   PATCH /api/admin/events/:id
 // @access  Private/Admin
@@ -284,17 +330,37 @@ const adminEditEvent = async (req, res) => {
     delete updates.createdBy;
     delete updates.organizer;
 
-    const event = await Event.findByIdAndUpdate(id, updates, { 
-      returnDocument: 'after', 
-      runValidators: true 
-    });
-
+    const event = await Event.findById(id);
     if (!event) {
       return res.status(404).json({ message: 'Event not found' });
     }
 
-    broadcastEventUpdate({ ...event.toObject(), action: 'updated' });
-    res.json(event);
+    // Reset status to active if it was cancelled, unless explicitly changed
+    if (event.status === 'cancelled' && !updates.status) {
+      updates.status = 'resubmitted'; // Admin edit of cancelled event implicitly resubmits if not set to active
+    }
+
+    if (req.file) {
+      // Delete old banner if exists
+      if (event.bannerImage && event.bannerImage.public_id) {
+        try {
+          await require('../config/cloudinary').uploader.destroy(event.bannerImage.public_id);
+        } catch (e) {
+          console.warn('Cloudinary image deletion failed:', e.message);
+        }
+      }
+      updates.bannerImage = { url: req.file.path, public_id: req.file.filename };
+    } else if (req.body.bannerImage && typeof req.body.bannerImage === 'string') {
+      updates.bannerImage = { url: req.body.bannerImage };
+    }
+
+    const updatedEvent = await Event.findByIdAndUpdate(id, updates, { 
+      returnDocument: 'after', 
+      runValidators: true 
+    });
+
+    broadcastEventUpdate({ ...updatedEvent.toObject(), action: 'updated' });
+    res.json(updatedEvent);
   } catch (error) {
     console.error('Admin edit event error:', error);
     res.status(500).json({ message: 'Server error' });
@@ -358,6 +424,7 @@ module.exports = {
   getAllTransactions,
   broadcastEmergency,
   cancelEvent,
+  approveEvent,
   adminEditEvent,
   adminDeleteEvent,
 };

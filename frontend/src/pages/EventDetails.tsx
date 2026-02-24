@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Calendar, MapPin, Users, ShieldCheck, ArrowLeft, Loader2, Share2, Facebook, Twitter, Linkedin, Megaphone } from 'lucide-react';
-import { getEventById, EventData } from '../api/eventApi';
+import { Calendar, MapPin, Users, ShieldCheck, ArrowLeft, Loader2, Share2, Facebook, Twitter, Linkedin, Megaphone, Slash, Check } from 'lucide-react';
+import CancelEventModal from '../components/CancelEventModal';
+import { getEventById, EventData, approveEvent } from '../api/eventApi';
 import CheckoutButton from '../components/bookings/CheckoutButton';
 import AnnouncementModal from '../components/AnnouncementModal';
 import { useRealTime } from '../hooks/useRealTime';
@@ -17,28 +18,29 @@ const EventDetails: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [quantity, setQuantity] = useState(1);
   const [isAnnouncementOpen, setIsAnnouncementOpen] = useState(false);
+  const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
   
   const { socket, joinEvent, leaveEvent } = useRealTime();
 
   const isOwner = user?._id === (event?.organizer?._id || event?.createdBy?._id);
   const isAdmin = user?.role === 'admin';
-
   useEffect(() => {
-    const fetchEvent = async () => {
-      try {
-        if (id) {
-          const data = await getEventById(id);
-          setEvent(data);
-        }
-      } catch (error) {
-        toast.error('Failed to load event details');
-        navigate('/events');
-      } finally {
-        setLoading(false);
-      }
-    };
     fetchEvent();
   }, [id, navigate]);
+
+  const fetchEvent = async () => {
+    try {
+      if (id) {
+        setLoading(true);
+        const data = await getEventById(id);
+        setEvent(data);
+      }
+    } catch (error) {
+      toast.error('Failed to load event details');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // Real-time listeners
   useEffect(() => {
@@ -119,6 +121,16 @@ const EventDetails: React.FC = () => {
                 <span className="px-4 py-1 bg-indigo-50 text-indigo-600 text-xs font-black uppercase tracking-widest rounded-full">
                   {event.category}
                 </span>
+                {event.status === 'cancelled' && (
+                  <span className="px-4 py-1 bg-gray-100 text-gray-600 text-xs font-black uppercase tracking-widest rounded-full">
+                    Event Cancelled
+                  </span>
+                )}
+                {event.status === 'resubmitted' && (
+                  <span className="px-4 py-1 bg-amber-50 text-amber-600 text-xs font-black uppercase tracking-widest rounded-full">
+                    Awaiting Approval
+                  </span>
+                )}
                 {event.ticketPrice === 0 && (
                    <span className="px-4 py-1 bg-emerald-50 text-emerald-600 text-xs font-black uppercase tracking-widest rounded-full">
                      Free Access
@@ -137,6 +149,36 @@ const EventDetails: React.FC = () => {
                   >
                     <Megaphone className="w-5 h-5" />
                     <span className="hidden sm:inline">Send Announcement</span>
+                  </motion.button>
+                )}
+                {(isOwner || isAdmin) && event.status !== 'cancelled' && (
+                  <motion.button
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={() => setIsCancelModalOpen(true)}
+                    className="p-3 bg-white text-rose-500 border border-rose-100 rounded-2xl shadow-xl hover:bg-rose-50 transition-all flex items-center gap-2 font-bold text-sm whitespace-nowrap"
+                  >
+                    <Slash className="w-5 h-5" />
+                    <span className="hidden sm:inline">Cancel Event</span>
+                  </motion.button>
+                )}
+                {isAdmin && event.status === 'resubmitted' && (
+                  <motion.button
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={async () => {
+                      try {
+                        await approveEvent(event._id!);
+                        toast.success('Event approved!');
+                        fetchEvent();
+                      } catch {
+                        toast.error('Failed to approve event');
+                      }
+                    }}
+                    className="p-3 bg-emerald-600 text-white rounded-2xl shadow-xl hover:bg-emerald-700 transition-all flex items-center gap-2 font-bold text-sm whitespace-nowrap"
+                  >
+                    <Check className="w-5 h-5" />
+                    <span className="hidden sm:inline">Approve Event</span>
                   </motion.button>
                 )}
               </div>
@@ -270,6 +312,13 @@ const EventDetails: React.FC = () => {
         onClose={() => setIsAnnouncementOpen(false)}
         eventId={event._id!}
         eventTitle={event.title}
+      />
+
+      <CancelEventModal
+        isOpen={isCancelModalOpen}
+        onClose={() => setIsCancelModalOpen(false)}
+        onSuccess={fetchEvent}
+        event={{ _id: event._id!, title: event.title }}
       />
     </div>
   );
