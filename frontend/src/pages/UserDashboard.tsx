@@ -10,17 +10,20 @@ import Skeleton from '../components/common/Skeleton';
 import { updateProfilePicture } from '../api/userApi';
 import { toast } from 'sonner';
 import { useRealTime } from '../hooks/useRealTime';
+import { Booking, AxiosErrorResponse, AxiosErrorData } from '../types';
 
 const TABS = [
   { id: 'upcoming', label: 'Upcoming Events', icon: Clock },
   { id: 'past', label: 'Past Events', icon: HistoryIcon },
-];
+] as const;
+
+type TabType = typeof TABS[number]['id'];
 
 const UserDashboard: React.FC = () => {
   const { user, login } = useAuth();
-  const [tab, setTab] = useState<'upcoming' | 'past'>('upcoming');
-  const [upcoming, setUpcoming] = useState([]);
-  const [past, setPast] = useState([]);
+  const [tab, setTab] = useState<TabType>('upcoming');
+  const [upcoming, setUpcoming] = useState<Booking[]>([]);
+  const [past, setPast] = useState<Booking[]>([]);
   const [totalSpend, setTotalSpend] = useState(0);
   const [totalBookings, setTotalBookings] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -44,7 +47,8 @@ const UserDashboard: React.FC = () => {
       
       toast.success('Profile updated successfully!');
       setIsEditing(false);
-    } catch {
+    } catch (error) {
+      console.error('Failed to update profile:', error);
       toast.error('Failed to update profile');
     }
   };
@@ -60,8 +64,8 @@ const UserDashboard: React.FC = () => {
       setPast(data.past || []);
       setTotalSpend(data.totalSpend || 0);
       setTotalBookings(data.totalBookings || 0);
-    } catch {
-      console.error('Failed to fetch user dashboard');
+    } catch (error) {
+      console.error('Failed to fetch user dashboard:', error);
     } finally {
       if (showLoading) setLoading(false);
     }
@@ -69,11 +73,13 @@ const UserDashboard: React.FC = () => {
 
   const fetchTickets = useCallback(async () => {
     try {
-      const { data } = await axios.get('/bookings/my-tickets');
-      const pending = data.some((b: any) => b.paymentStatus === 'pending');
+      const { data } = await axios.get<Booking[]>('/bookings/my-tickets');
+      const pending = data.some((b) => b.paymentStatus === 'pending');
       setHasPending(pending);
       if (pending) fetchDashboard(false);
-    } catch {}
+    } catch (error) {
+      console.error('Failed to fetch tickets:', error);
+    }
   }, [fetchDashboard]);
 
   useEffect(() => { fetchDashboard(); fetchTickets(); }, [fetchDashboard, fetchTickets]);
@@ -118,8 +124,10 @@ const UserDashboard: React.FC = () => {
       }
 
       toast.success('Profile picture updated!');
-    } catch (error: any) {
-      toast.error('Failed to update profile picture');
+    } catch (error: unknown) {
+      const err = error as AxiosErrorResponse;
+      const message = (err.response?.data as AxiosErrorData)?.message || 'Failed to update profile picture';
+      toast.error(message);
     }
   };
 
@@ -295,7 +303,7 @@ const UserDashboard: React.FC = () => {
             </div>
           ) : (
             <div className="grid grid-cols-1 gap-6">
-              {displayed.map((booking: any, i) => (
+              {displayed.map((booking, i) => (
                 <motion.div key={booking._id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.04 }}>
                   <TicketCard booking={booking} />
                 </motion.div>

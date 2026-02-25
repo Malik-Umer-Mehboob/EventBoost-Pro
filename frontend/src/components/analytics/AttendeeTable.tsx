@@ -2,14 +2,7 @@ import React, { useState } from 'react';
 import { Search, ChevronLeft, ChevronRight, Users } from 'lucide-react';
 import { format } from 'date-fns';
 
-interface Attendee {
-  bookingId: string;
-  name: string;
-  email: string;
-  tickets: number;
-  totalPaid: number;
-  bookedAt: string;
-}
+import { Attendee } from '../../types';
 
 interface AttendeeTableProps {
   attendees: Attendee[];

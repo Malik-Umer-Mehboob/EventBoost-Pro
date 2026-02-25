@@ -19,7 +19,7 @@ const EventFilters: React.FC<EventFiltersProps> = ({ onSearch, onFilterChange })
         const data = await getCategories();
         setCategories(['All', ...data]);
       } catch (error) {
-        console.error('Failed to fetch categories');
+        console.error('Failed to fetch categories', error);
       }
     };
     fetchCategories();

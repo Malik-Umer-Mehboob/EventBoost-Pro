@@ -3,10 +3,12 @@ import { CreditCard, ArrowLeft, Loader2, Receipt, AlertCircle, RefreshCw } from 
 import { Link } from 'react-router-dom';
 import { getMyTransactions, requestRefund } from '../api/bookingApi';
 import { format } from 'date-fns';
+import axios from 'axios';
 import { toast } from 'sonner';
+import { Transaction } from '../types';
 
 const Transactions: React.FC = () => {
-  const [transactions, setTransactions] = useState([]);
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
@@ -17,7 +19,7 @@ const Transactions: React.FC = () => {
       setTransactions(data);
       setError('');
     } catch (error) {
-      console.error('Failed to fetch transactions');
+      console.error('Failed to fetch transactions:', error);
       setError('Could not load transaction history.');
     } finally {
       setLoading(false);
@@ -37,9 +39,14 @@ const Transactions: React.FC = () => {
         description: 'Stripe is processing your refund. It may take a few minutes to reflect.'
       });
       fetchTransactions();
-    } catch (error: any) {
+    } catch (error) {
+      console.error('Refund error:', error);
+      let errorMessage = 'Could not initiate refund at this time.';
+      if (axios.isAxiosError(error)) {
+        errorMessage = error.response?.data?.message || errorMessage;
+      }
       toast.error('Refund Failed', {
-        description: error.response?.data?.message || 'Could not initiate refund at this time.'
+        description: errorMessage
       });
     }
   };
@@ -101,7 +108,7 @@ const Transactions: React.FC = () => {
             </div>
           ) : (
             <div className="space-y-4">
-              {transactions.map((tx: any) => (
+              {transactions.map((tx) => (
                 <div key={tx._id} className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow flex flex-col md:flex-row md:items-center justify-between gap-4">
                   <div className="flex items-center gap-4">
                     <div className="w-12 h-12 rounded-xl bg-slate-50 flex items-center justify-center text-slate-400">
@@ -127,7 +134,7 @@ const Transactions: React.FC = () => {
                     </div>
                     {tx.type === 'payment' && tx.status === 'succeeded' && (
                       <button 
-                        onClick={() => handleRefund(tx.booking)}
+                        onClick={() => handleRefund(typeof tx.booking === 'string' ? tx.booking : tx.booking._id)}
                         className="text-[10px] font-black uppercase tracking-tighter text-rose-500 hover:text-rose-700 underline underline-offset-4 decoration-rose-200 transition-colors"
                       >
                         Request Refund

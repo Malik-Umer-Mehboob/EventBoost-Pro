@@ -1,31 +1,7 @@
 import api from './axios';
+import { Event } from '../types';
 
-export interface EventData {
-  _id?: string;
-  title: string;
-  description: string;
-  date: string;
-  location: string;
-  category: string;
-  ticketPrice: number;
-  ticketQuantity: number;
-  bannerImage?: {
-    url: string;
-    public_id?: string;
-  };
-  isFeatured?: boolean;
-  soldTickets?: number;
-  organizer?: {
-    _id: string;
-    name: string;
-  };
-  createdBy?: {
-    _id: string;
-    name: string;
-  };
-  attendees?: string[];
-  status?: 'active' | 'cancelled' | 'resubmitted';
-}
+export type EventData = Event;
 
 export const getCategories = async () => {
   const { data } = await api.get('/events/categories');

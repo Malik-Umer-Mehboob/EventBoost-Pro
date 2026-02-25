@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Edit3, ArrowLeft, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
+import axios from 'axios';
 import EventForm from '../components/events/EventForm';
 import { getEventById, updateEvent, EventData } from '../api/eventApi';
 import { updateEventAdmin } from '../api/adminApi';
@@ -24,6 +25,7 @@ const EditEvent: React.FC = () => {
           setEvent(data);
         }
       } catch (error) {
+        console.error('Failed to fetch event details:', error);
         toast.error('Failed to fetch event details');
         navigate(-1);
       } finally {
@@ -47,9 +49,14 @@ const EditEvent: React.FC = () => {
         });
         navigate(-1);
       }
-    } catch (error: any) {
+    } catch (error) {
+      console.error('Failed to update event:', error);
+      let errorMessage = 'Something went wrong';
+      if (axios.isAxiosError(error)) {
+        errorMessage = error.response?.data?.message || errorMessage;
+      }
       toast.error('Failed to update event', {
-          description: error.response?.data?.message || 'Something went wrong',
+          description: errorMessage,
       });
     } finally {
       setUpdating(false);

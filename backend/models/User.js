@@ -32,6 +32,11 @@ const userSchema = mongoose.Schema({
     url: { type: String, default: '' },
     public_id: { type: String, default: '' }
   },
+  status: {
+    type: String,
+    enum: ['active', 'blocked'],
+    default: 'active',
+  },
 }, {
   timestamps: true,
 });

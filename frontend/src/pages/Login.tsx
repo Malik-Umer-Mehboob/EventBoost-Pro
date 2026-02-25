@@ -49,8 +49,8 @@ const Login = () => {
       } else {
           navigate('/dashboard');
       }
-    } catch (error: any) {
-      // Handled by global interceptor
+    } catch {
+       // Handled by global interceptor
     }
   };
 

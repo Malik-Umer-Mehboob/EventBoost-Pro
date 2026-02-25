@@ -39,27 +39,41 @@ const notifyMany = async (recipientIds, data) => {
   try {
     const { idempotencyKeyBase, ...rest } = data;
     
-    const notifications = recipientIds.map((id, index) => ({
-      ...rest,
-      recipient: id,
-      idempotencyKey: idempotencyKeyBase ? `${idempotencyKeyBase}-${id}` : undefined
-    }));
+    // Convert to simple array of objects for insertMany
+    const notifications = recipientIds.map((id, index) => {
+      const recipientId = id.toString();
+      return {
+        ...rest,
+        recipient: recipientId,
+        idempotencyKey: idempotencyKeyBase ? `${idempotencyKeyBase}-${recipientId}` : undefined
+      };
+    });
     
+    // insertMany is atomic per document, ordered: false allows partial success if some are duplicates
     const savedNotifications = await Notification.insertMany(notifications, { ordered: false });
     
-    // Send socket updates to each
-    savedNotifications.forEach(n => {
-      sendSocketNotification(n.recipient, n);
-    });
+    // Send socket updates to each (Safe check and batching)
+    if (savedNotifications && Array.isArray(savedNotifications)) {
+      console.log(`📡 Sending ${savedNotifications.length} socket notifications...`);
+      savedNotifications.forEach(n => {
+        sendSocketNotification(n.recipient, n);
+      });
+    }
     
     return savedNotifications;
   } catch (error) {
+    // 11000 is duplicate key error (idempotency triggered)
     if (error.code === 11000) {
-      // Some failed due to duplicate, we can ignore or fetch existing
-      return Notification.find({ recipient: { $in: recipientIds }, ...rest });
+      console.log('ℹ️ Some notifications were already sent (idempotency)');
+      // Return what we can or just success
+      return Notification.find({ 
+        recipient: { $in: recipientIds }, 
+        type: data.type,
+        event: data.event
+      }).lean();
     }
     console.error('Error sending batch notifications:', error);
-    return [];
+    throw error; // Rethrow to let the controller handle it
   }
 };
 

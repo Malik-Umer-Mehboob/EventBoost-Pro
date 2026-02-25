@@ -1,9 +1,9 @@
+/* eslint-disable react-refresh/only-export-components */
 import React, { createContext, useContext, useEffect, useState, useRef, useCallback } from 'react';
 import { io, Socket } from 'socket.io-client';
 import { useAuth } from './AuthContext';
 import { toast } from 'sonner';
 
-// @ts-ignore
 const SOCKET_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
 interface SocketContextType {
@@ -27,8 +27,10 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       if (socketRef.current) {
         socketRef.current.disconnect();
         socketRef.current = null;
-        setSocket(null);
-        setIsConnected(false);
+        queueMicrotask(() => {
+          setSocket(null);
+          setIsConnected(false);
+        });
       }
       return;
     }
@@ -42,7 +44,11 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     });
 
     socketRef.current = newSocket;
-    setSocket(newSocket);
+    
+    // Use queueMicrotask to avoid synchronous setState warning during effect execution
+    queueMicrotask(() => {
+      setSocket(newSocket);
+    });
 
     newSocket.on('connect', () => {
       setIsConnected(true);
@@ -70,9 +76,12 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     return () => {
       newSocket.disconnect();
       socketRef.current = null;
-      setSocket(null);
-      setIsConnected(false);
+      queueMicrotask(() => {
+        setSocket(null);
+        setIsConnected(false);
+      });
     };
+
   }, [token, user]);
 
   const joinEvent = useCallback((eventId: string) => {
@@ -101,3 +110,4 @@ export const useSocket = () => {
   }
   return context;
 };
+

@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useSocket } from '../context/SocketContext';
 import { useAuth } from '../context/AuthContext';
 import api from '../api/axios';
@@ -18,31 +18,32 @@ export const useNotifications = () => {
   const { user } = useAuth();
   const { socket } = useSocket();
   const [notifications, setNotifications] = useState<Notification[]>([]);
-  const [unreadCount, setUnreadCount] = useState(0);
+
+  const unreadCount = useMemo(() => 
+    notifications.filter((n: Notification) => !n.isRead).length, 
+    [notifications]
+  );
 
   const fetchNotifications = useCallback(async () => {
-    if (!user) return;
+    if (!user?._id) return;
     try {
       const { data } = await api.get('/notifications');
       setNotifications(data);
-      setUnreadCount(data.filter((n: Notification) => !n.isRead).length);
     } catch (error) {
       console.error('Failed to fetch notifications:', error);
     }
-  }, [user]);
+  }, [user?._id]);
 
   useEffect(() => {
-    if (user) {
-      fetchNotifications();
-    }
-  }, [user, fetchNotifications]);
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    fetchNotifications();
+  }, [fetchNotifications]);
 
   useEffect(() => {
     if (!socket || !user) return;
 
     const handleNewNotification = (notification: Notification) => {
-      setNotifications((prev) => [notification, ...prev]);
-      setUnreadCount((prev) => prev + 1);
+      setNotifications((prev: Notification[]) => [notification, ...prev]);
       toast.info(notification.title || 'New Notification', {
         description: notification.message,
       });
@@ -58,10 +59,9 @@ export const useNotifications = () => {
   const markAsRead = async (id: string) => {
     try {
       await api.patch(`/notifications/${id}/read`);
-      setNotifications((prev) =>
-        prev.map((n) => (n._id === id ? { ...n, isRead: true } : n))
+      setNotifications((prev: Notification[]) =>
+        prev.map((n: Notification) => (n._id === id ? { ...n, isRead: true } : n))
       );
-      setUnreadCount((prev) => Math.max(0, prev - 1));
     } catch (error) {
       console.error('Failed to mark notification as read:', error);
     }
@@ -70,8 +70,7 @@ export const useNotifications = () => {
   const markAllAsRead = async () => {
     try {
       await api.patch('/notifications/read-all');
-      setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })));
-      setUnreadCount(0);
+      setNotifications((prev: Notification[]) => prev.map((n: Notification) => ({ ...n, isRead: true })));
     } catch (error) {
       console.error('Failed to mark all as read:', error);
     }

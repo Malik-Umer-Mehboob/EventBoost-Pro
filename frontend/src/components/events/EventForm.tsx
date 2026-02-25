@@ -33,7 +33,7 @@ const EventForm: React.FC<EventFormProps> = ({ initialData, onSubmit, isLoading 
         const data = await getCategories();
         setCategories(data);
       } catch (error) {
-        console.error('Failed to fetch categories');
+        console.error('Failed to fetch categories', error);
       }
     };
     fetchCategories();
@@ -48,10 +48,9 @@ const EventForm: React.FC<EventFormProps> = ({ initialData, onSubmit, isLoading 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const data = new FormData();
-    Object.keys(formData).forEach(key => {
-      const value = (formData as any)[key];
+    Object.entries(formData).forEach(([key, value]) => {
       if (value !== undefined && key !== 'bannerImage') {
-        data.append(key, value);
+        data.append(key, String(value));
       }
     });
 

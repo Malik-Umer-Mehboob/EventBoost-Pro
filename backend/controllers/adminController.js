@@ -397,6 +397,118 @@ const adminDeleteEvent = async (req, res) => {
   }
 };
 
+// @desc    Get All Organizers with their event counts
+// @route   GET /api/admin/organizers
+// @access  Private/Admin
+const getAllOrganizers = async (req, res) => {
+  try {
+    const organizers = await User.aggregate([
+      { $match: { role: 'organizer' } },
+      {
+        $lookup: {
+          from: 'events',
+          localField: '_id',
+          foreignField: 'organizer',
+          as: 'events'
+        }
+      },
+      {
+        $project: {
+          name: 1,
+          email: 1,
+          createdAt: 1,
+          status: 1,
+          eventCount: { $size: '$events' }
+        }
+      },
+      { $sort: { createdAt: -1 } }
+    ]);
+
+    res.status(200).json({
+      total: organizers.length,
+      organizers
+    });
+  } catch (error) {
+    console.error('Get all organizers error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+// @desc    Update Organizer details
+// @route   PUT /api/admin/organizers/:id
+// @access  Private/Admin
+const updateOrganizer = async (req, res) => {
+  try {
+    const { name, status } = req.body;
+    const organizer = await User.findById(req.params.id);
+
+    if (!organizer || organizer.role !== 'organizer') {
+      return res.status(404).json({ message: 'Organizer not found' });
+    }
+
+    if (name) organizer.name = name;
+    if (status) organizer.status = status;
+
+    await organizer.save();
+
+    res.json({
+      _id: organizer._id,
+      name: organizer.name,
+      email: organizer.email,
+      status: organizer.status,
+      role: organizer.role
+    });
+  } catch (error) {
+    console.error('Update organizer error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+// @desc    Delete Organizer and their events
+// @route   DELETE /api/admin/organizers/:id
+// @access  Private/Admin
+const deleteOrganizer = async (req, res) => {
+  try {
+    const organizer = await User.findById(req.params.id);
+
+    if (!organizer || organizer.role !== 'organizer') {
+      return res.status(404).json({ message: 'Organizer not found' });
+    }
+
+    // Delete all events created by this organizer
+    // Note: cascading deletion of bookings/tickets might be needed depending on business rules.
+    // The requirement says: "Optionally delete related events OR reassign them. Must: Remove organizer from DB, Clean up related data (events, bookings if needed)"
+    
+    // Find events to clean up images and bookings
+    const events = await Event.find({ organizer: organizer._id });
+    
+    for (const event of events) {
+        // Here we could call some cleanup logic if it exists, 
+        // but for now we follow the "Must remove" rule.
+        // We'll delete bookings and tickets associated with these events.
+        await Booking.deleteMany({ event: event._id });
+        await Ticket.deleteMany({ event: event._id });
+        
+        // Delete banner from Cloudinary
+        if (event.bannerImage && event.bannerImage.public_id) {
+            try {
+                await require('../config/cloudinary').uploader.destroy(event.bannerImage.public_id);
+            } catch (e) {
+                console.warn('Cloudinary image deletion failed for event:', event._id, e.message);
+            }
+        }
+    }
+
+    await Event.deleteMany({ organizer: organizer._id });
+    await User.findByIdAndDelete(req.params.id);
+
+    res.json({ message: 'Organizer and all related data deleted successfully' });
+  } catch (error) {
+    console.error('Delete organizer error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
 const sendRefundEmail = async (user, event) => {
   try {
     const transporter = nodemailer.createTransport({
@@ -427,4 +539,7 @@ module.exports = {
   approveEvent,
   adminEditEvent,
   adminDeleteEvent,
+  getAllOrganizers,
+  updateOrganizer,
+  deleteOrganizer,
 };

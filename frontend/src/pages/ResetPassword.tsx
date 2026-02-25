@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import api from '../api/axios';
+import axios from 'axios';
 import { toast } from 'sonner';
 import { Eye, EyeOff } from 'lucide-react';
 
@@ -26,9 +27,14 @@ const ResetPassword = () => {
                 duration: 4000,
             });
             navigate('/login');
-        } catch (error: any) {
+        } catch (error) {
+            console.error('Password reset error:', error);
+            let errorMessage = 'Failed to reset password';
+            if (axios.isAxiosError(error)) {
+                errorMessage = error.response?.data?.message || errorMessage;
+            }
             toast.error('Error', {
-                description: error.response?.data?.message || 'Failed to reset password',
+                description: errorMessage,
             });
         }
     };

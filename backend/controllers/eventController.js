@@ -355,6 +355,11 @@ const getCategories = (req, res) => {
 const sendAnnouncement = async (req, res) => {
   try {
     const { title, message } = req.body;
+    
+    if (!title || !message) {
+      return res.status(400).json({ message: 'Title and message are required' });
+    }
+
     const event = await Event.findById(req.params.id);
 
     if (!event) {
@@ -362,63 +367,98 @@ const sendAnnouncement = async (req, res) => {
     }
 
     // Check ownership
-    if (event.organizer.toString() !== req.user.id && req.user.role !== 'admin') {
-      return res.status(403).json({ message: 'Not authorized' });
+    const organizerId = event.organizer || event.createdBy;
+    if (!organizerId || (organizerId.toString() !== req.user.id && req.user.role !== 'admin')) {
+      return res.status(403).json({ message: 'Not authorized to send announcements for this event' });
     }
 
-    if (!event.attendees || event.attendees.length === 0) {
+    // Ensure we have unique attendees (and they are strings)
+    // We fetch from TWO sources to be absolutely safe:
+    // 1. The denormalized event.attendees array
+    // 2. The Booking collection (source of truth for paid tickets)
+    const BookingModel = require('../models/Booking');
+    const paidBookings = await BookingModel.find({ 
+      event: event._id, 
+      paymentStatus: 'paid', 
+      refundStatus: 'none' 
+    }).select('user').lean();
+    
+    const bookingRecipientIds = paidBookings.map(b => b.user.toString());
+    const eventAttendeeIds = (event.attendees || []).map(id => id.toString());
+    
+    const uniqueAttendeeIds = [...new Set([...bookingRecipientIds, ...eventAttendeeIds])];
+
+    if (uniqueAttendeeIds.length === 0) {
       return res.status(400).json({ message: 'No registered attendees to notify' });
     }
 
-    const attendees = await User.find({ _id: { $in: event.attendees } });
-    const attendeeEmails = attendees.map(u => u.email);
+    console.log(`📣 Sending announcement for "${event.title}" to ${uniqueAttendeeIds.length} attendees...`);
+
+    // Fetch attendee profiles to get emails
+    const attendees = await User.find({ _id: { $in: uniqueAttendeeIds } }).select('email').lean();
+    const attendeeEmails = attendees.map(u => u.email).filter(Boolean);
     
-    // Also include organizer email
-    const organizer = await User.findById(event.organizer);
-    if (organizer && !attendeeEmails.includes(organizer.email)) {
-      attendeeEmails.push(organizer.email);
+    // Add organizer/admin to the BCC or separate send if needed, but here we just add to the list
+    const senderEmail = req.user.email;
+    if (senderEmail && !attendeeEmails.includes(senderEmail)) {
+      attendeeEmails.push(senderEmail);
     }
 
-    // Send Batch Emails
-    await sendBatchEmails(attendeeEmails, {
-      subject: `Announcement: ${event.title}`,
-      html: `
-        <h1>New Announcement</h1>
-        <p>Hi,</p>
-        <p>The organizer of <strong>${event.title}</strong> has sent a new announcement:</p>
-        <div style="padding: 15px; background: #f4f4f4; border-radius: 5px;">
-          <h3>${title}</h3>
-          <p>${message}</p>
-        </div>
-        <a href="${process.env.FRONTEND_URL}/events/${event._id}">View Event</a>
-      `,
-      type: 'announcement',
-      eventId: event._id
-    });
-
-    // Send In-App Notifications
-    await notifyMany(event.attendees, {
+    // Standardize notification data
+    const notificationData = {
       type: 'announcement',
       title: `Announcement: ${title}`,
       message,
       link: `/events/${event._id}`,
       event: event._id,
-      sender: req.user.id
-    });
+      sender: req.user.id,
+      idempotencyKeyBase: `announcement-${event._id}-${Date.now()}`
+    };
 
-    // Broadcast live alert to everyone in the event room, the organizer, and all attendees' personal rooms
+    // 1. Send In-App Notifications & Socket Alerts (Synchronous/Awaited for immediate feedback)
+    const savedNotifications = await notifyMany(uniqueAttendeeIds, notificationData);
+    
+    // 2. Broadcast live alert via Socket.IO
     const targetRooms = [`event_${event._id}`, `user_${req.user.id}`];
-    event.attendees.forEach(id => targetRooms.push(`user_${id}`));
+    uniqueAttendeeIds.forEach(id => targetRooms.push(`user_${id}`));
 
     broadcastEmergencyAlert(
       { title: `Announcement: ${title}`, content: message, eventId: event._id },
       targetRooms
     );
 
-    res.json({ message: 'Announcement sent to all attendees' });
+    // 3. Send Batch Emails (Can be fire-and-forget or awaited)
+    // We await it here to ensure success before responding, but catching errors is vital
+    try {
+      await sendBatchEmails(attendeeEmails, {
+        subject: `Announcement: ${event.title}`,
+        html: `
+          <h1>New Announcement</h1>
+          <p>Hi,</p>
+          <p>The organizer of <strong>${event.title}</strong> has sent a new announcement:</p>
+          <div style="padding: 15px; background: #f4f4f4; border-radius: 5px; border-left: 4px solid #6366f1;">
+            <h3 style="margin-top: 0;">${title}</h3>
+            <p style="white-space: pre-wrap;">${message}</p>
+          </div>
+          <p style="margin-top: 20px;">
+            <a href="${process.env.FRONTEND_URL}/events/${event._id}" style="background: #6366f1; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; font-weight: bold;">View Event Details</a>
+          </p>
+        `,
+        type: 'announcement',
+        eventId: event._id
+      });
+    } catch (emailError) {
+      console.error('Email batching failed, but notifications were sent:', emailError);
+      // We don't fail the whole request if emails fail but in-app notifications worked
+    }
+
+    res.json({ 
+      message: 'Announcement sent to all attendees',
+      recipientCount: uniqueAttendeeIds.length
+    });
   } catch (error) {
     console.error('Error in sendAnnouncement:', error);
-    res.status(500).json({ message: 'Server error' });
+    res.status(500).json({ message: error.message || 'Server error during announcement broadcast' });
   }
 };
 
@@ -512,8 +552,13 @@ const getEventAttendees = async (req, res) => {
     const { id } = req.params;
     const { page = 1, limit = 20, search = '' } = req.query;
 
-    // Ensure organizer owns this event
-    const event = await Event.findOne({ _id: id, organizer: req.user.id });
+    // Ensure organizer owns this event OR user is an admin
+    const query = { _id: id };
+    if (req.user.role !== 'admin') {
+      query.organizer = req.user.id;
+    }
+    
+    const event = await Event.findOne(query);
     if (!event) {
       return res.status(403).json({ message: 'Access denied or event not found' });
     }

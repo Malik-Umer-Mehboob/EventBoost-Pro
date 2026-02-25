@@ -19,6 +19,7 @@ import {
   X,
   ArrowUpRight
 } from 'lucide-react';
+import { LucideIcon } from 'lucide-react';
 import CancelEventModal from '../components/CancelEventModal';
 import { deleteEvent } from '../api/eventApi';
 import { useRealTime } from '../hooks/useRealTime';
@@ -30,29 +31,9 @@ import { useAuth } from '../context/AuthContext';
 import RevenueChart from '../components/analytics/RevenueChart';
 import AttendeeTable from '../components/analytics/AttendeeTable';
 import Skeleton from '../components/common/Skeleton';
+import { Event, OrgStats, ChartData, Attendee, User, AxiosErrorResponse, AxiosErrorData } from '../types';
 
-interface EventData {
-  _id: string;
-  title: string;
-  date: string;
-  location: string;
-  category: string;
-  ticketPrice: number;
-  ticketQuantity: number;
-  soldTickets: number;
-  isFeatured: boolean;
-  status?: 'active' | 'cancelled' | 'resubmitted';
-  bannerImage?: { url: string };
-}
-
-interface OrgStats {
-  totalEvents: number;
-  totalSold: number;
-  totalRevenue: number;
-  upcomingEvents: number;
-}
-
-const StatCard: React.FC<{ label: string; value: string | number; icon: any; trend?: string; color: string; delay: number }> = ({ label, value, icon: Icon, trend, color, delay }) => (
+const StatCard: React.FC<{ label: string; value: string | number; icon: LucideIcon; trend?: string; color: string; delay: number }> = ({ label, value, icon: Icon, trend, color, delay }) => (
   <motion.div
     initial={{ opacity: 0, y: 20 }}
     animate={{ opacity: 1, y: 0 }}
@@ -83,10 +64,10 @@ const StatCard: React.FC<{ label: string; value: string | number; icon: any; tre
 
 const OrganizerDashboard: React.FC = () => {
   const { user, login } = useAuth();
-  const [profile, setProfile] = useState<any>(null);
-  const [events, setEvents] = useState<EventData[]>([]);
+  const [profile, setProfile] = useState<User | null>(null);
+  const [events, setEvents] = useState<Event[]>([]);
   const [stats, setStats] = useState<OrgStats | null>(null);
-  const [monthlySales, setMonthlySales] = useState<any[]>([]);
+  const [monthlySales, setMonthlySales] = useState<ChartData[]>([]);
   const [loading, setLoading] = useState(true);
   const { socket } = useRealTime();
 
@@ -94,10 +75,10 @@ const OrganizerDashboard: React.FC = () => {
   const [editName, setEditName] = useState('');
 
   const [cancelModalOpen, setCancelModalOpen] = useState(false);
-  const [eventToCancel, setEventToCancel] = useState<EventData | null>(null);
+  const [eventToCancel, setEventToCancel] = useState<Event | null>(null);
 
-  const [attendeeEvent, setAttendeeEvent] = useState<EventData | null>(null);
-  const [attendees, setAttendees] = useState<any[]>([]);
+  const [attendeeEvent, setAttendeeEvent] = useState<Event | null>(null);
+  const [attendees, setAttendees] = useState<Attendee[]>([]);
   const [attendeeLoading, setAttendeeLoading] = useState(false);
 
   const navigate = useNavigate();
@@ -154,14 +135,16 @@ const OrganizerDashboard: React.FC = () => {
     try {
       const data = await updateProfilePicture(formData);
       if (user) login({ ...user, ...data });
-      setProfile((prev: any) => ({ ...prev, profilePicture: data.profilePicture }));
+      setProfile((prev) => prev ? ({ ...prev, ...data }) : null);
       toast.success('Profile picture updated!');
-    } catch {
-      toast.error('Failed to update profile picture');
+    } catch (error: unknown) {
+      const err = error as AxiosErrorResponse;
+      const message = (err.response?.data as AxiosErrorData)?.message || 'Failed to update profile picture';
+      toast.error(message);
     }
   };
 
-  const openAttendees = async (event: EventData) => {
+  const openAttendees = async (event: Event) => {
     setAttendeeEvent(event);
     setAttendeeLoading(true);
     try {
@@ -269,7 +252,7 @@ const OrganizerDashboard: React.FC = () => {
               >
                 <div className="flex items-center justify-between mb-8 relative z-10">
                   <div>
-                    <h2 className="text-2xl font-black text-slate-900 tracking-tight uppercase tracking-widest text-[14px] flex items-center gap-2">
+                    <h2 className="text-[14px] font-black text-slate-900 uppercase tracking-widest flex items-center gap-2">
                        <BarChart3 className="w-5 h-5 text-indigo-500" />
                        Performance Data
                     </h2>

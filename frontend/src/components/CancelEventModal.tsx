@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, AlertTriangle, Loader2, CheckCircle2 } from 'lucide-react';
+import axios from 'axios';
 import { cancelEvent } from '../api/eventApi';
 import { toast } from 'sonner';
 
@@ -24,9 +25,13 @@ const CancelEventModal: React.FC<CancelEventModalProps> = ({ isOpen, onClose, on
       toast.success('Event cancelled successfully');
       onSuccess();
       onClose();
-    } catch (error: any) {
+    } catch (error) {
       console.error('Cancellation error:', error);
-      toast.error(error.response?.data?.message || 'Failed to cancel event');
+      let errorMessage = 'Failed to cancel event';
+      if (axios.isAxiosError(error)) {
+        errorMessage = error.response?.data?.message || errorMessage;
+      }
+      toast.error(errorMessage);
     } finally {
       setLoading(false);
     }

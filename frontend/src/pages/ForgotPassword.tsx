@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../api/axios';
+import axios from 'axios';
 import { toast } from 'sonner';
 import { Eye, EyeOff, ArrowLeft } from 'lucide-react';
 import ThreeBackground from '../components/ThreeBackground';
@@ -22,8 +23,13 @@ const ForgotPassword = () => {
             await api.post('/auth/forgot-password', { email });
             toast.success('OTP sent to your email 📧');
             setStep(2);
-        } catch (error: any) {
-            toast.error(error.response?.data?.message || 'Failed to send OTP');
+        } catch (error) {
+            console.error('Failed to send OTP:', error);
+            let errorMessage = 'Failed to send OTP';
+            if (axios.isAxiosError(error)) {
+                errorMessage = error.response?.data?.message || errorMessage;
+            }
+            toast.error(errorMessage);
         } finally {
             setLoading(false);
         }
@@ -36,8 +42,13 @@ const ForgotPassword = () => {
             await api.post('/auth/verify-otp', { email, otp });
             toast.success('OTP Verified ✅');
             setStep(3);
-        } catch (error: any) {
-            toast.error(error.response?.data?.message || 'Invalid OTP');
+        } catch (error) {
+            console.error('OTP Verification error:', error);
+            let errorMessage = 'Invalid OTP';
+            if (axios.isAxiosError(error)) {
+                errorMessage = error.response?.data?.message || errorMessage;
+            }
+            toast.error(errorMessage);
         } finally {
             setLoading(false);
         }
@@ -54,8 +65,13 @@ const ForgotPassword = () => {
             await api.post('/auth/reset-password', { email, otp, password });
             toast.success('Password Reset Successful 🎉');
             navigate('/login');
-        } catch (error: any) {
-            toast.error(error.response?.data?.message || 'Failed to reset password');
+        } catch (error) {
+            console.error('Password reset error:', error);
+            let errorMessage = 'Failed to reset password';
+            if (axios.isAxiosError(error)) {
+                errorMessage = error.response?.data?.message || errorMessage;
+            }
+            toast.error(errorMessage);
         } finally {
             setLoading(false);
         }

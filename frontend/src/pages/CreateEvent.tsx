@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Sparkles, ArrowLeft } from 'lucide-react';
 import { toast } from 'sonner';
+import axios from 'axios';
 import EventForm from '../components/events/EventForm';
 import { createEvent } from '../api/eventApi';
 
@@ -18,9 +19,14 @@ const CreateEvent: React.FC = () => {
           description: 'Your event is now live and ready for bookings.',
       });
       navigate('/organizer/dashboard');
-    } catch (error: any) {
+    } catch (error) {
+      console.error('Failed to create event:', error);
+      let errorMessage = 'Something went wrong';
+      if (axios.isAxiosError(error)) {
+        errorMessage = error.response?.data?.message || errorMessage;
+      }
       toast.error('Failed to create event', {
-          description: error.response?.data?.message || 'Something went wrong',
+          description: errorMessage,
       });
     } finally {
       setLoading(false);

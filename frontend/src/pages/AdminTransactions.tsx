@@ -2,10 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { Loader2, ShieldCheck, RefreshCw, AlertCircle, Search, Filter, Tag } from 'lucide-react';
 import { getAllTransactions } from '../api/bookingApi';
 import { format } from 'date-fns';
+import { Transaction, User } from '../types';
 
 const AdminTransactions: React.FC = () => {
-  const [transactions, setTransactions] = useState([]);
-  const [filteredTransactions, setFilteredTransactions] = useState([]);
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [filteredTransactions, setFilteredTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
@@ -18,7 +19,7 @@ const AdminTransactions: React.FC = () => {
       setFilteredTransactions(data);
       setError('');
     } catch (error) {
-      console.error('Failed to fetch all transactions');
+      console.error('Failed to fetch all transactions:', error);
       setError('Failed to retrieve platform transaction logs.');
     } finally {
       setLoading(false);
@@ -31,12 +32,15 @@ const AdminTransactions: React.FC = () => {
 
   useEffect(() => {
     const term = searchTerm.toLowerCase();
-    const filtered = transactions.filter((tx: any) => 
-      tx.user?.name?.toLowerCase().includes(term) ||
-      tx.user?.email?.toLowerCase().includes(term) ||
-      tx.event?.title?.toLowerCase().includes(term) ||
-      tx.stripePaymentIntentId?.toLowerCase().includes(term)
-    );
+    const filtered = transactions.filter((tx: Transaction) => {
+      const user = tx.user as User;
+      return (
+        user?.name?.toLowerCase().includes(term) ||
+        user?.email?.toLowerCase().includes(term) ||
+        tx.event?.title?.toLowerCase().includes(term) ||
+        tx.stripePaymentIntentId?.toLowerCase().includes(term)
+      );
+    });
     setFilteredTransactions(filtered);
   }, [searchTerm, transactions]);
 
@@ -122,42 +126,45 @@ const AdminTransactions: React.FC = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredTransactions.map((tx: any) => (
-                    <tr key={tx._id} className="bg-white group hover:shadow-xl transition-all shadow-sm rounded-2xl ring-1 ring-gray-100">
-                      <td className="px-6 py-4 rounded-l-2xl">
-                        <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 rounded-full bg-indigo-50 border border-indigo-100 flex items-center justify-center text-indigo-600 font-bold">
-                                {tx.user?.name?.charAt(0)}
-                            </div>
-                            <div>
-                                <p className="font-black text-gray-900 leading-none mb-1">{tx.user?.name || 'Deleted User'}</p>
-                                <p className="text-xs text-gray-400">{tx.user?.email}</p>
-                            </div>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4">
-                        <div className="flex items-center gap-2">
-                            <Tag className="w-4 h-4 text-indigo-400" />
-                            <p className="font-bold text-gray-700 whitespace-nowrap overflow-hidden max-w-[200px] text-ellipsis">
-                                {tx.event?.title || 'Unknown Event'}
-                            </p>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 text-right">
-                        <p className={`font-black text-lg ${tx.type === 'refund' ? 'text-rose-600' : 'text-indigo-600'}`}>
-                            {tx.type === 'refund' ? '-' : ''}${tx.amount}
-                        </p>
-                      </td>
-                      <td className="px-6 py-4">
-                        <div className={`inline-flex px-4 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border ${getStatusColor(tx.status)}`}>
-                            {tx.status}
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 rounded-r-2xl">
-                        <p className="text-xs font-bold text-gray-500">{format(new Date(tx.createdAt), 'MMM dd, HH:mm')}</p>
-                      </td>
-                    </tr>
-                  ))}
+                  {filteredTransactions.map((tx: Transaction) => {
+                    const user = tx.user as User;
+                    return (
+                      <tr key={tx._id} className="bg-white group hover:shadow-xl transition-all shadow-sm rounded-2xl ring-1 ring-gray-100">
+                        <td className="px-6 py-4 rounded-l-2xl">
+                          <div className="flex items-center gap-3">
+                              <div className="w-10 h-10 rounded-full bg-indigo-50 border border-indigo-100 flex items-center justify-center text-indigo-600 font-bold">
+                                  {user?.name?.charAt(0)}
+                              </div>
+                              <div>
+                                  <p className="font-black text-gray-900 leading-none mb-1">{user?.name || 'Deleted User'}</p>
+                                  <p className="text-xs text-gray-400">{user?.email}</p>
+                              </div>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4">
+                          <div className="flex items-center gap-2">
+                              <Tag className="w-4 h-4 text-indigo-400" />
+                              <p className="font-bold text-gray-700 whitespace-nowrap overflow-hidden max-w-[200px] text-ellipsis">
+                                  {tx.event?.title || 'Unknown Event'}
+                              </p>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 text-right">
+                          <p className={`font-black text-lg ${tx.type === 'refund' ? 'text-rose-600' : 'text-indigo-600'}`}>
+                              {tx.type === 'refund' ? '-' : ''}${tx.amount}
+                          </p>
+                        </td>
+                        <td className="px-6 py-4">
+                          <div className={`inline-flex px-4 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border ${getStatusColor(tx.status)}`}>
+                              {tx.status}
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 rounded-r-2xl">
+                          <p className="text-xs font-bold text-gray-500">{format(new Date(tx.createdAt), 'MMM dd, HH:mm')}</p>
+                        </td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>

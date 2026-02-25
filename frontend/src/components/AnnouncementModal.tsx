@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Megaphone, X, Loader2 } from 'lucide-react';
+import axios from 'axios';
 import api from '../api/axios';
 import { toast } from 'sonner';
 
@@ -37,7 +38,13 @@ const AnnouncementModal: React.FC<AnnouncementModalProps> = ({
       onClose();
     } catch (error) {
       console.error('Failed to send announcement:', error);
-      toast.error('Failed to send announcement');
+      let errorMessage = 'Failed to send announcement. Please check your connection.';
+      
+      if (axios.isAxiosError(error)) {
+        errorMessage = error.response?.data?.message || errorMessage;
+      }
+      
+      toast.error(errorMessage);
     } finally {
       setIsSending(false);
     }

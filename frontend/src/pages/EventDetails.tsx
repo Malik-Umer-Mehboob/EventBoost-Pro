@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Calendar, MapPin, Users, ShieldCheck, ArrowLeft, Loader2, Share2, Facebook, Twitter, Linkedin, Megaphone, Slash, Check } from 'lucide-react';
+import { Calendar, MapPin, Users, ShieldCheck, ArrowLeft, Loader2, Share2, Facebook, Twitter, Linkedin, Slash, Check } from 'lucide-react';
 import CancelEventModal from '../components/CancelEventModal';
 import { getEventById, EventData, approveEvent } from '../api/eventApi';
 import CheckoutButton from '../components/bookings/CheckoutButton';
@@ -24,11 +24,7 @@ const EventDetails: React.FC = () => {
 
   const isOwner = user?._id === (event?.organizer?._id || event?.createdBy?._id);
   const isAdmin = user?.role === 'admin';
-  useEffect(() => {
-    fetchEvent();
-  }, [id, navigate]);
-
-  const fetchEvent = async () => {
+  const fetchEvent = useCallback(async () => {
     try {
       if (id) {
         setLoading(true);
@@ -36,11 +32,16 @@ const EventDetails: React.FC = () => {
         setEvent(data);
       }
     } catch (error) {
+      console.error('Failed to load event details:', error);
       toast.error('Failed to load event details');
     } finally {
       setLoading(false);
     }
-  };
+  }, [id]);
+
+  useEffect(() => {
+    fetchEvent();
+  }, [fetchEvent]);
 
   // Real-time listeners
   useEffect(() => {
@@ -50,7 +51,7 @@ const EventDetails: React.FC = () => {
 
     socket.on('event:attendee_count', ({ eventId, soldTickets }: { eventId: string, soldTickets: number }) => {
       if (eventId === id) {
-        setEvent((prev) => prev ? { ...prev, soldTickets } : null);
+        setEvent((prev: EventData | null) => prev ? { ...prev, soldTickets } : null);
       }
     });
 
@@ -147,8 +148,7 @@ const EventDetails: React.FC = () => {
                     onClick={() => setIsAnnouncementOpen(true)}
                     className="p-3 bg-indigo-600 text-white rounded-2xl shadow-xl hover:bg-indigo-700 transition-all flex items-center gap-2 font-bold text-sm whitespace-nowrap"
                   >
-                    <Megaphone className="w-5 h-5" />
-                    <span className="hidden sm:inline">Send Announcement</span>
+                    Send Announcement
                   </motion.button>
                 )}
                 {(isOwner || isAdmin) && event.status !== 'cancelled' && (
@@ -171,7 +171,8 @@ const EventDetails: React.FC = () => {
                         await approveEvent(event._id!);
                         toast.success('Event approved!');
                         fetchEvent();
-                      } catch {
+                      } catch (error) {
+                        console.error('Failed to approve event:', error);
                         toast.error('Failed to approve event');
                       }
                     }}

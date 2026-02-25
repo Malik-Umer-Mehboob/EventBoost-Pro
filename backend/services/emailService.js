@@ -80,12 +80,26 @@ const sendEmail = async (details) => {
 };
 
 const sendBatchEmails = async (recipients, details) => {
-  const results = await Promise.allSettled(
-    recipients.map(to => sendWithRetry({ ...details, to }))
-  );
+  const batchSize = 10; // Process 10 emails at a time
+  let totalSent = 0;
+
+  for (let i = 0; i < recipients.length; i += batchSize) {
+    const batch = recipients.slice(i, i + batchSize);
+    console.log(`📧 Sending email batch ${Math.floor(i / batchSize) + 1} (${batch.length} recipients)...`);
+    
+    const results = await Promise.allSettled(
+      batch.map(to => sendWithRetry({ ...details, to }))
+    );
+    
+    totalSent += results.filter(r => r.status === 'fulfilled' && r.value.success).length;
+
+    // Small delay between batches to be kind to the SMTP server/rate limits
+    if (i + batchSize < recipients.length) {
+      await new Promise(resolve => setTimeout(resolve, 1000));
+    }
+  }
   
-  const sent = results.filter(r => r.status === 'fulfilled' && r.value.success).length;
-  return { total: recipients.length, sent };
+  return { total: recipients.length, sent: totalSent };
 };
 
 module.exports = {

@@ -15,9 +15,10 @@ import {
 } from 'lucide-react';
 import axios from '../../api/axios';
 import { toast } from 'sonner';
+import { Booking, AxiosErrorResponse, AxiosErrorData } from '../../types';
 
 interface TicketCardProps {
-  booking: any;
+  booking: Booking;
 }
 
 const TicketCard: React.FC<TicketCardProps> = ({ booking }) => {
@@ -50,18 +51,29 @@ const TicketCard: React.FC<TicketCardProps> = ({ booking }) => {
       link.click();
       link.remove();
       toast.success('Tickets downloaded successfully');
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Download failed:', error);
       
-      if (error.response && error.response.data instanceof Blob) {
-        const reader = new FileReader();
-        reader.onload = () => {
-          const errorMessage = JSON.parse(reader.result as string).message;
-          toast.error(errorMessage || 'Failed to download tickets');
-        };
-        reader.readAsText(error.response.data);
+      const err = error as AxiosErrorResponse;
+      if (err.response) {
+        if (err.response.data instanceof Blob) {
+          const reader = new FileReader();
+          reader.onload = () => {
+            try {
+              const errorMessage = JSON.parse(reader.result as string).message;
+              toast.error(errorMessage || 'Failed to download tickets');
+            } catch {
+              toast.error('Failed to download tickets');
+            }
+          };
+          reader.readAsText(err.response.data);
+          return;
+        }
+        
+        const message = (err.response.data as AxiosErrorData).message || 'Failed to download tickets';
+        toast.error(message);
       } else {
-        toast.error(error.response?.data?.message || 'Failed to download tickets');
+        toast.error('Failed to download tickets');
       }
     } finally {
       setDownloading(false);

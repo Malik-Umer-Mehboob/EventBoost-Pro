@@ -8,7 +8,10 @@ const {
   cancelEvent,
   approveEvent,
   adminEditEvent,
-  adminDeleteEvent
+  adminDeleteEvent,
+  getAllOrganizers,
+  updateOrganizer,
+  deleteOrganizer
 } = require('../controllers/adminController');
 const { protect, authorize } = require('../middleware/authMiddleware');
 const upload = require('../middleware/uploadMiddleware');
@@ -21,5 +24,10 @@ router.put('/events/:id/cancel', protect, authorize('admin'), cancelEvent);
 router.patch('/events/:id/approve', protect, authorize('admin'), approveEvent);
 router.patch('/events/:id', protect, authorize('admin'), upload.single('banner'), adminEditEvent);
 router.delete('/events/:id', protect, authorize('admin'), adminDeleteEvent);
+
+// Organizer Management
+router.get('/organizers', protect, authorize('admin'), getAllOrganizers);
+router.put('/organizers/:id', protect, authorize('admin'), updateOrganizer);
+router.delete('/organizers/:id', protect, authorize('admin'), deleteOrganizer);
 
 module.exports = router;

@@ -3,16 +3,26 @@ import { Canvas, useFrame } from '@react-three/fiber';
 import { Points, PointMaterial } from '@react-three/drei';
 import * as THREE from 'three';
 
+// Deterministic random generator for idempotency
+const seededRandom = (s: number) => {
+  let seed = s;
+  return () => {
+    seed = (seed * 48271) % 2147483647;
+    return (seed - 1) / 2147483646;
+  };
+};
+
 function ParticleField({ count = 2000, color = "#a855f7", size = 0.005, speed = 1 }) {
   const ref = useRef<THREE.Points>(null!);
   
   // Create sphere of particles
   const sphere = useMemo(() => {
+    const random = seededRandom(count); // Use count as seed for stability
     const positions = new Float32Array(count * 3);
     for (let i = 0; i < count; i++) {
-        const theta = 2 * Math.PI * Math.random();
-        const phi = Math.acos(2 * Math.random() - 1);
-        const radius = 1.5 + Math.random() * 0.5;
+        const theta = 2 * Math.PI * random();
+        const phi = Math.acos(2 * random() - 1);
+        const radius = 1.5 + random() * 0.5;
         const x = radius * Math.sin(phi) * Math.cos(theta);
         const y = radius * Math.sin(phi) * Math.sin(theta);
         const z = radius * Math.cos(phi);

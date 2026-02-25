@@ -26,7 +26,7 @@ const Register = () => {
         description: 'Your account has been created. Please login to continue.',
       });
       navigate('/login');
-    } catch (error: any) {
+    } catch {
         // Handled by global interceptor
     }
   };

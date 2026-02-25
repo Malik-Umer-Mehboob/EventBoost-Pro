@@ -66,8 +66,9 @@ const EventList: React.FC = () => {
       }
       toast.success('Event removed successfully');
       setEvents(prev => prev.filter(e => e._id !== id));
-    } catch {
-      toast.error('Failed to remove event');
+    } catch (error) {
+        console.error('Failed to remove event:', error);
+        toast.error('Failed to remove event');
     }
   };
 
@@ -78,7 +79,7 @@ const EventList: React.FC = () => {
         setEvents(data);
         setFilteredEvents(data);
       } catch (error) {
-        console.error('Failed to fetch events');
+        console.error('Failed to fetch events:', error);
       } finally {
         setLoading(false);
       }
@@ -90,7 +91,7 @@ const EventList: React.FC = () => {
   useEffect(() => {
     if (!socket) return;
 
-    socket.on('event:updated', ({ event, action }: { event: any, action: string }) => {
+    socket.on('event:updated', ({ event, action }: { event: EventData, action: string }) => {
       setEvents((prev) => {
         if (action === 'deleted') {
           return prev.filter((e) => e._id !== event._id);

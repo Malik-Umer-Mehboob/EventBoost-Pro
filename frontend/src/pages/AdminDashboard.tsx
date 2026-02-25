@@ -9,29 +9,7 @@ import RevenueChart from '../components/analytics/RevenueChart';
 import { format } from 'date-fns';
 import { useRealTime } from '../hooks/useRealTime';
 import Skeleton from '../components/common/Skeleton';
-
-interface DashboardStats {
-  users: number;
-  organizers: number;
-  events: number;
-  revenue: number;
-  ticketsSold: number;
-}
-
-interface RecentBooking {
-  _id: string;
-  user: { name: string; email: string };
-  event: { title: string; date: string };
-  quantity: number;
-  totalAmount: number;
-  createdAt: string;
-}
-
-interface MonthlySale {
-  name: string;
-  revenue: number;
-  bookings: number;
-}
+import { AdminStats, RecentBooking, ChartData, Event } from '../types';
 
 const AdminDashboard = () => {
   const [orgName, setOrgName] = useState('');
@@ -39,9 +17,9 @@ const AdminDashboard = () => {
   const [orgPassword, setOrgPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
 
-  const [stats, setStats] = useState<DashboardStats | null>(null);
+  const [stats, setStats] = useState<AdminStats | null>(null);
   const [recentBookings, setRecentBookings] = useState<RecentBooking[]>([]);
-  const [monthlySales, setMonthlySales] = useState<MonthlySale[]>([]);
+  const [monthlySales, setMonthlySales] = useState<ChartData[]>([]);
   const [loadingStats, setLoadingStats] = useState(true);
 
   // Emergency Broadcast Form
@@ -49,7 +27,7 @@ const AdminDashboard = () => {
   const [broadcastMessage, setBroadcastMessage] = useState('');
   const [selectedEventId, setSelectedEventId] = useState('');
   const [isBroadcasting, setIsBroadcasting] = useState(false);
-  const [allEvents, setAllEvents] = useState<any[]>([]);
+  const [allEvents, setAllEvents] = useState<Event[]>([]);
 
   const navigate = useNavigate();
   const { socket } = useRealTime();
@@ -66,7 +44,8 @@ const AdminDashboard = () => {
       // Fetch events for broadcast targeting
       const { data: eventsData } = await api.get('/events');
       setAllEvents(eventsData || []);
-    } catch {
+    } catch (error) {
+      console.error('Dashboard analytics error:', error);
       toast.error('Failed to load dashboard analytics');
     } finally {
       if (!isSilent) setLoadingStats(false);
@@ -109,7 +88,8 @@ const AdminDashboard = () => {
       setBroadcastTitle('');
       setBroadcastMessage('');
       setSelectedEventId('');
-    } catch {
+    } catch (error) {
+      console.error('Broadcast error:', error);
       toast.error('Failed to send broadcast');
     } finally {
       setIsBroadcasting(false);
@@ -122,7 +102,9 @@ const AdminDashboard = () => {
       await api.post('/admin/create-organizer', { name: orgName, email: orgEmail, password: orgPassword });
       toast.success('Organizer Created 🔥', { description: `${orgName} can now log in.` });
       setOrgName(''); setOrgEmail(''); setOrgPassword('');
-    } catch { /* Handled by global interceptor */ }
+    } catch (error) {
+      console.error('Organizer creation error:', error);
+    }
   };
 
   const kpiCards = [
@@ -150,6 +132,13 @@ const AdminDashboard = () => {
               title="Refresh Analytics"
             >
               <RefreshCw className={`w-5 h-5 ${loadingStats ? 'animate-spin' : ''}`} />
+            </button>
+            <button
+              onClick={() => navigate('/admin/manage-organizers')}
+              className="flex items-center gap-2 px-5 py-3 bg-white border border-gray-100 text-gray-700 rounded-2xl font-bold hover:border-indigo-100 hover:text-indigo-600 transition-all shadow-sm"
+            >
+              <Users className="w-4 h-4" />
+              Manage Organizers
             </button>
             <button
               onClick={() => navigate('/admin/transactions')}
@@ -192,7 +181,7 @@ const AdminDashboard = () => {
               >
                 <option value="">All Users (Platform-wide)</option>
                 <optgroup label="Target Specific Event">
-                  {allEvents.map((event: any) => (
+                  {allEvents.map((event) => (
                     <option key={event._id} value={event._id}>
                       {event.title}
                     </option>

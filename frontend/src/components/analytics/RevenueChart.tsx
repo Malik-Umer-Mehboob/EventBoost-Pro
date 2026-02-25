@@ -10,14 +10,30 @@ import {
   Legend,
 } from 'recharts';
 
+import { ChartData } from '../../types';
+
 interface RevenueChartProps {
-  data: Record<string, any>[];
+  data: ChartData[];
   lines: { key: string; label: string; color: string }[];
   title?: string;
   height?: number;
 }
 
-const CustomTooltip = ({ active, payload, label }: any) => {
+interface TooltipEntry {
+  dataKey: string;
+  name: string;
+  value: string | number;
+  color: string;
+  payload: ChartData;
+}
+
+interface CustomTooltipProps {
+  active?: boolean;
+  payload?: TooltipEntry[];
+  label?: string;
+}
+
+const CustomTooltip = ({ active, payload, label }: CustomTooltipProps) => {
   if (active && payload && payload.length) {
     return (
       <div className="glass p-4 border border-white/20 shadow-2xl rounded-2xl min-w-[160px]">
@@ -25,7 +41,7 @@ const CustomTooltip = ({ active, payload, label }: any) => {
           {label}
         </p>
         <div className="space-y-1.5">
-          {payload.map((entry: any) => (
+          {payload.map((entry: TooltipEntry) => (
             <div key={entry.dataKey} className="flex items-center justify-between gap-4">
               <div className="flex items-center gap-2">
                 <div className="w-2 h-2 rounded-full" style={{ backgroundColor: entry.color }} />
@@ -104,3 +120,4 @@ const RevenueChart: React.FC<RevenueChartProps> = ({ data, lines, title, height 
 };
 
 export default RevenueChart;
+

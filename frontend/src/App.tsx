@@ -16,6 +16,7 @@ import EventList from './pages/EventList';
 import EventDetails from './pages/EventDetails';
 import Transactions from './pages/Transactions';
 import AdminTransactions from './pages/AdminTransactions';
+import ManageOrganizers from './pages/ManageOrganizers';
 
 import AuthLayout from './layouts/AuthLayout';
 import MainLayout from './layouts/MainLayout';
@@ -67,6 +68,7 @@ const App = () => {
               <Route element={<ProtectedRoute allowedRoles={['admin']} />}>
                 <Route path="/admin/dashboard" element={<AdminDashboard />} />
                 <Route path="/admin/transactions" element={<AdminTransactions />} />
+                <Route path="/admin/manage-organizers" element={<ManageOrganizers />} />
               </Route>
 
               <Route element={<ProtectedRoute allowedRoles={['organizer']} />}>

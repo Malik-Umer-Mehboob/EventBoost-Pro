@@ -27,12 +27,12 @@ router.get('/events', protect, authorize('organizer'), getMyEvents);
 
 // @desc    Get attendees for a specific event (paginated)
 // @route   GET /api/organizers/events/:id/attendees
-// @access  Private/Organizer
-router.get('/events/:id/attendees', protect, authorize('organizer'), getEventAttendees);
+// @access  Private/Organizer/Admin
+router.get('/events/:id/attendees', protect, authorize('organizer', 'admin'), getEventAttendees);
 
 // @desc    Send Announcement for an Event
 // @route   POST /api/organizers/events/:id/announce
-// @access  Private/Organizer
-router.post('/events/:id/announce', protect, authorize('organizer'), announcementLimiter, sendAnnouncement);
+// @access  Private/Organizer/Admin
+router.post('/events/:id/announce', protect, authorize('organizer', 'admin'), announcementLimiter, sendAnnouncement);
 
 module.exports = router;

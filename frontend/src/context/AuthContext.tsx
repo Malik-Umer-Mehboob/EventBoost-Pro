@@ -1,16 +1,6 @@
-import { createContext, useState, useEffect, ReactNode, useContext } from 'react';
-
-interface User {
-  _id: string;
-  name: string;
-  email: string;
-  role: 'admin' | 'organizer' | 'user';
-  token: string;
-  profilePicture?: {
-    url: string;
-    public_id?: string;
-  };
-}
+/* eslint-disable react-refresh/only-export-components */
+import { createContext, useState, ReactNode, useContext, useCallback, useMemo } from 'react';
+import { User } from '../types';
 
 interface AuthContextType {
   user: User | null;
@@ -22,29 +12,31 @@ interface AuthContextType {
 export const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
-  const [user, setUser] = useState<User | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-
-  useEffect(() => {
+  const [user, setUser] = useState<User | null>(() => {
     const storedUser = localStorage.getItem('user');
-    if (storedUser) {
-      setUser(JSON.parse(storedUser));
-    }
-    setIsLoading(false);
-  }, []);
+    return storedUser ? (JSON.parse(storedUser) as User) : null;
+  });
+  const [isLoading] = useState(false);
 
-  const login = (userData: User) => {
+  const login = useCallback((userData: User) => {
     localStorage.setItem('user', JSON.stringify(userData));
     setUser(userData);
-  };
+  }, []);
 
-  const logout = () => {
+  const logout = useCallback(() => {
     localStorage.removeItem('user');
     setUser(null);
-  };
+  }, []);
+
+  const value = useMemo(() => ({
+    user,
+    login,
+    logout,
+    isLoading
+  }), [user, login, logout, isLoading]);
 
   return (
-    <AuthContext.Provider value={{ user, login, logout, isLoading }}>
+    <AuthContext.Provider value={value}>
       {children}
     </AuthContext.Provider>
   );
