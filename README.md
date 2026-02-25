@@ -2,7 +2,7 @@
 
 EventBoost-Pro is a **production-ready full-stack event management and ticketing platform** that enables organizers to create events, users to purchase tickets securely, and admins to manage the entire platform efficiently.
 
-Built using **React (Frontend)**, **Node.js/Express (Backend)**, and **MongoDB Atlas**, the platform includes real-time alerts, secure payments, automatic refunds, email reminders, profile management, and role-based access control.
+Built using **React (Frontend)**, **Node.js/Express (Backend)**, and **MongoDB Atlas**, the platform includes real-time alerts, secure payments, automatic refunds, email reminders, profile management, advanced event lifecycle control, and role-based access control.
 
 ---
 
@@ -18,6 +18,8 @@ Built using **React (Frontend)**, **Node.js/Express (Backend)**, and **MongoDB A
   - Admin
   - Organizer
   - User
+- Middleware-based role verification
+- Organizer ownership validation for event actions
 
 ---
 
@@ -31,6 +33,7 @@ Built using **React (Frontend)**, **Node.js/Express (Backend)**, and **MongoDB A
 - View purchased tickets and event history
 - Receive email reminders for upcoming events
 - Manage notification preferences
+- View refund status for cancelled events
 
 ### Organizer Profile
 - Update organizer information:
@@ -43,18 +46,37 @@ Built using **React (Frontend)**, **Node.js/Express (Backend)**, and **MongoDB A
   - Set ticket price & quantity
   - Send manual or automated email reminders
   - Track attendee list and ticket sales
+  - Cancel own events (with auto refund system)
 - View organizer-specific statistics
 
 ---
 
-## 🎉 Event Management (Organizer)
+## 🎉 Advanced Event Management System
 
-- Create / Update / Delete events
-- Upload event banner images
-- Set ticket price & quantity
-- View attendees list
-- Send manual email reminders to registered users
-- Share event via social media
+### Structured Event Lifecycle
+
+The platform now includes a controlled event status workflow:
+
+Event Status Types:
+- `draft`
+- `pending`
+- `active`
+- `cancelled`
+- `resubmitted`
+
+### Event Flow Logic
+
+- Organizer creates event → `pending`
+- Admin approves event → `active`
+- Admin cancels event → `cancelled`
+- Organizer updates cancelled event → `resubmitted`
+- Admin re-approves → `active`
+
+This prevents:
+- Direct reactivation of cancelled events
+- Duplicate event recreation
+- Inconsistent dashboard states
+- Unauthorized status manipulation
 
 ---
 
@@ -67,6 +89,7 @@ Built using **React (Frontend)**, **Node.js/Express (Backend)**, and **MongoDB A
 - Ticket confirmation email (with PDF attachment)
 - View purchased tickets in dashboard
 - Download ticket PDF anytime
+- Modern digital ticket UI with QR code design
 
 ---
 
@@ -77,24 +100,33 @@ Built using **React (Frontend)**, **Node.js/Express (Backend)**, and **MongoDB A
 - PaymentIntent stored in database
 - Secure payment verification
 - Prevent duplicate ticket generation
+- Transaction-safe payment confirmation
 
-### Automatic Refund System
+### Automatic Refund System (Admin & Organizer)
+
 If an event is cancelled:
-- Admin changes event status to `cancelled`
+
+- Admin or Organizer changes event status to `cancelled`
 - System automatically:
   - Finds all purchased tickets
-  - Triggers Stripe refund API
-  - Updates ticket refund status
+  - Triggers Stripe Refund API
+  - Updates booking payment status to `refunded`
+  - Prevents double refunds
   - Sends refund confirmation email
-- User dashboard shows refund status
+  - Sends real-time cancellation notification
+- User dashboard shows refund status instantly
 
 ---
 
 ## 📢 Notifications & Email Reminders
 
-### 📧 Email Reminders
+### 📧 Email System
+
 - Automatic reminder before event date (e.g., 24 hours before event)
 - Organizer can manually trigger reminder emails
+- Refund confirmation emails
+- Event cancellation emails
+- Event approval notifications
 - Includes event details in email:
   - Event name
   - Date & time
@@ -102,28 +134,40 @@ If an event is cancelled:
   - Ticket number
 
 ### 🔔 In-App Notifications
-- Notification created when:
-  - Ticket purchased
-  - Event updated
-  - Event cancelled
-  - Refund processed
+
+Notification created when:
+- Ticket purchased
+- Event updated
+- Event cancelled
+- Refund processed
+- Event resubmitted
+- Admin approves event
+
+Features:
 - Notifications stored in database
-- Users can view notification history in dashboard
+- Read / Unread tracking
+- Role-based notification filtering
+- Users can view notification history
 - Real-time notification using Socket.io
 
 ---
 
 ## 🚨 Emergency Broadcast (Real-Time)
 
-Admin can send instant platform-wide alerts:
+Admin can send instant alerts:
 
 - Event cancellation
 - Security alerts
 - Maintenance announcements
 
-Powered by Socket.io:
-- All connected users receive real-time alert banner
-- Red warning toast / modal display
+Enhanced Socket.io Architecture:
+
+- Users join event-specific rooms:
+  event_<eventId>
+- Targeted broadcast to specific event attendees
+- Real-time alert banner display
+- Toast / modal warning UI
+- Prevents unnecessary global broadcasts
 
 ---
 
@@ -131,26 +175,32 @@ Powered by Socket.io:
 
 ## 🛡 Admin Dashboard
 - Manage users & organizers
+- Approve / Reject events
 - Cancel events
-- Trigger refunds
+- Trigger automatic refunds
 - Send emergency broadcasts
 - View revenue statistics
 - View ticket sales overview
+- Monitor event lifecycle states
 
 ## 🎯 Organizer Dashboard
 - Manage own events
+- Create / Update / Delete events
+- Cancel own events (auto refund enabled)
 - View ticket sales
 - View attendees
 - Send event reminders
 - Update organizer profile
+- Track event status (pending / active / cancelled / resubmitted)
 
 ## 👥 User Dashboard
 - View purchased tickets
 - Download ticket PDF
 - View refund status
 - View notification history
-- Update personal profile (name, email, password, profile picture)
+- Update personal profile
 - Track event participation
+- Real-time event cancellation alerts
 
 ---
 
@@ -163,6 +213,7 @@ Powered by Socket.io:
 - Three.js
 - Lucide Icons
 - Axios
+- Socket.io Client
 
 ### Backend
 - Node.js
@@ -170,7 +221,7 @@ Powered by Socket.io:
 - MongoDB + Mongoose
 - JWT Authentication
 - Passport.js (Google OAuth)
-- Socket.io (Real-Time)
+- Socket.io (Room-Based Real-Time System)
 - Stripe API
 - Nodemailer (Email System)
 
@@ -186,8 +237,11 @@ Powered by Socket.io:
 - Password hashing using bcrypt
 - JWT protected routes
 - Role-based route protection
+- Organizer ownership validation
 - Secure Stripe payment verification
 - Automatic refund protection
+- Duplicate event prevention
+- Protected event status transitions
 - Environment variables for sensitive data
 - Admin-only critical actions
 
