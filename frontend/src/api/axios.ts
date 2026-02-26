@@ -1,7 +1,10 @@
 import axios from 'axios';
 
+// In production (Vercel), the frontend and API share the same domain,
+// so a relative /api path works perfectly.
+// In local dev, set VITE_API_URL=http://localhost:5000/api in frontend/.env.local
 const api = axios.create({
-  baseURL: 'http://localhost:5000/api',
+  baseURL: import.meta.env.VITE_API_URL || '/api',
 });
 
 api.interceptors.request.use(
