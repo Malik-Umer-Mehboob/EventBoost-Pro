@@ -26,17 +26,24 @@ const IS_SERVERLESS = process.env.VERCEL === '1';
 const app = express();
 
 // ── Middleware ────────────────────────────────────────────────────────────────
-const allowedOrigins = process.env.FRONTEND_URL
-  ? [process.env.FRONTEND_URL]
-  : ['http://localhost:5173'];
+// server.js
 
-app.use(
-  cors({
-    origin: allowedOrigins,
-    credentials: true,
-  })
-);
+const allowedOrigins = [
+  'https://eventboost-pro.vercel.app', // main frontend
+  'https://event-boost-uk.vercel.app'  // agar testing ya alternate frontend hai
+];
 
+app.use(cors({
+  origin: function(origin, callback){
+    if(!origin) return callback(null, true); // non-browser requests like Postman
+    if(allowedOrigins.indexOf(origin) === -1){
+      const msg = 'The CORS policy for this site does not allow access from the specified Origin.';
+      return callback(new Error(msg), false);
+    }
+    return callback(null, true);
+  },
+  credentials: true
+}));
 // ── Stripe Webhook (MUST be before express.json to receive raw body) ──────────
 const { stripeWebhook } = require('./controllers/bookingController');
 app.post(
