@@ -28,19 +28,21 @@ const app = express();
 // ── Middleware ────────────────────────────────────────────────────────────────
 // server.js
 
-const allowedOrigins = [
-  'https://eventboost-pro.vercel.app', // main frontend
-  'https://event-boost-uk.vercel.app'  // agar testing ya alternate frontend hai
-];
+const allowedOrigins = process.env.FRONTEND_URL
+  ? process.env.FRONTEND_URL.split(',').map(o => o.trim())
+  : ['http://localhost:5173'];
 
 app.use(cors({
-  origin: function(origin, callback){
-    if(!origin) return callback(null, true); // non-browser requests like Postman
-    if(allowedOrigins.indexOf(origin) === -1){
-      const msg = 'The CORS policy for this site does not allow access from the specified Origin.';
-      return callback(new Error(msg), false);
+  origin: function(origin, callback) {
+    // Allow requests with no origin (like mobile apps or curl requests)
+    if (!origin) return callback(null, true);
+    
+    if (allowedOrigins.indexOf(origin) !== -1 || (process.env.NODE_ENV !== 'production' && origin.startsWith('http://localhost'))) {
+      callback(null, true);
+    } else {
+      console.warn(`CORS blocked for origin: ${origin}`);
+      callback(null, false);
     }
-    return callback(null, true);
   },
   credentials: true
 }));
