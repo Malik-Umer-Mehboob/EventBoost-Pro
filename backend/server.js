@@ -32,29 +32,18 @@ const allowedOrigins = process.env.FRONTEND_URL
   ? process.env.FRONTEND_URL.split(',').map(o => o.trim())
   : ['http://localhost:5173'];
 
-app.use(
-  cors({
-    origin: function (origin, callback) {
+const corsOptions = {
+  origin: [
+    "https://event-boost.vercel.app",
+    "http://localhost:5173"
+  ],
+  credentials: true,
+};
 
-      // allow requests without origin (Postman, mobile apps)
-      if (!origin) return callback(null, true);
-
-      // ✅ allow localhost in development
-      if (origin.startsWith("http://localhost")) {
-        return callback(null, true);
-      }
-
-      // ✅ allow ALL vercel deployments
-      if (origin.endsWith(".vercel.app")) {
-        return callback(null, true);
-      }
-
-      console.warn("CORS blocked:", origin);
-      callback(new Error("Not allowed by CORS"));
-    },
-    credentials: true,
-  })
-);
+app.use(cors(corsOptions));
+app.options("*", cors(corsOptions));
+// VERY IMPORTANT
+app.options("*", cors());
 // ── Stripe Webhook (MUST be before express.json to receive raw body) ──────────
 const { stripeWebhook } = require('./controllers/bookingController');
 app.post(
