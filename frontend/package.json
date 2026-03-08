@@ -1,12 +1,11 @@
 {
-<<<<<<< HEAD
   "name": "frontend",
   "private": true,
   "version": "0.0.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc -b && vite build",
+    "build": "vite build",
     "lint": "eslint .",
     "preview": "vite preview"
   },
@@ -41,7 +40,7 @@
     "@types/node": "^24.10.1",
     "@types/react": "^19.2.7",
     "@types/react-dom": "^19.2.3",
-    "@vitejs/plugin-react": "^5.1.1",
+    "@vitejs/plugin-react": "^5.1.4",
     "autoprefixer": "^10.4.24",
     "eslint": "^9.39.1",
     "eslint-plugin-react-hooks": "^7.0.1",
@@ -54,12 +53,3 @@
     "vite": "^7.3.1"
   }
 }
-=======
-    "name": "eventboost-pro",
-    "version": "1.0.0",
-    "scripts": {
-        "build": "cd frontend && npm install && npm run build",
-        "install:backend": "cd backend && npm install"
-    }
-}
->>>>>>> 02731add07b4c12bb185b133323880abf65de305
