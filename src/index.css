@@ -1,0 +1,98 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 215 39% 12%; /* #0F1C2E */
+    --foreground: 210 33% 95%; /* #EDF2F7 */
+    --card: 211 40% 17%; /* #1A2B3D */
+    --card-foreground: 210 33% 95%;
+    --popover: 211 40% 17%;
+    --popover-foreground: 210 33% 95%;
+    --primary: 45 54% 54%; /* #C9A84C */
+    --primary-foreground: 215 39% 12%;
+    --secondary: 213 39% 14%; /* #162333 */
+    --secondary-foreground: 210 18% 78%; /* #B8C5D3 */
+    --muted: 213 39% 14%;
+    --muted-foreground: 207 24% 47%; /* #5A7A94 */
+    --accent: 213 39% 14%;
+    --accent-foreground: 45 54% 54%;
+    --destructive: 0 74% 63%; /* #E24B4A */
+    --destructive-foreground: 210 33% 95%;
+    --border: 209 37% 28%; /* #2E4A63 */
+    --input: 209 37% 28%;
+    --ring: 45 54% 54%;
+    --radius: 0.75rem;
+
+    /* Custom variables */
+    --bg-primary: #0F1C2E;
+    --bg-surface: #162333;
+    --bg-card: #1A2B3D;
+    --bg-deep: #08111C;
+    --gold: #C9A84C;
+    --gold-light: rgba(201,168,76,0.15);
+    --gold-border: rgba(201,168,76,0.25);
+    --border-custom: #2E4A63;
+    --border-hover: #3D5A73;
+    --text-heading: #EDF2F7;
+    --text-body: #B8C5D3;
+    --text-muted: #5A7A94;
+    --text-placeholder: #3D5A73;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    background: #0F1C2E;
+    color: #B8C5D3;
+    font-family: 'Inter', sans-serif;
+    font-feature-settings: "cv02", "cv05", "cv11";
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: #08111C; }
+  ::-webkit-scrollbar-thumb { background: #2E4A63; border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: #C9A84C; }
+}
+
+@layer utilities {
+  .glass {
+    @apply bg-navy-800/40 backdrop-blur-lg border border-navy-600/50 shadow-xl;
+  }
+
+  .glass-dark {
+    @apply bg-navy-950/60 backdrop-blur-lg border border-navy-600/50 shadow-2xl;
+  }
+
+  .gradient-primary {
+    @apply bg-gold text-navy-900;
+  }
+
+  .text-gradient {
+    @apply bg-clip-text text-transparent bg-gradient-to-br from-gold via-[#e5c77e] to-gold;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-track {
+    @apply bg-transparent;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    @apply bg-navy-600 rounded-full hover:bg-gold transition-colors;
+  }
+}
+.toast-success { background: #162333; border-left: 3px solid #1D9E75; color: #1D9E75; font-weight: 900; text-transform: uppercase; letter-spacing: 0.1em; font-size: 10px; }
+.toast-error { background: #162333; border-left: 3px solid #E24B4A; color: #E24B4A; font-weight: 900; text-transform: uppercase; letter-spacing: 0.1em; font-size: 10px; }
+.toast-warning { background: #162333; border-left: 3px solid #EF9F27; color: #EF9F27; font-weight: 900; text-transform: uppercase; letter-spacing: 0.1em; font-size: 10px; }
+.toast-info { background: #162333; border-left: 3px solid #378ADD; color: #378ADD; font-weight: 900; text-transform: uppercase; letter-spacing: 0.1em; font-size: 10px; }
+.alert-banner-realtime { background: rgba(226,75,74,0.1); border: 1px solid rgba(226,75,74,0.3); color: #E24B4A; padding: 1rem; border-radius: 1rem; display: flex; align-items: center; gap: 0.75rem; font-weight: 900; text-transform: uppercase; letter-spacing: 0.1em; font-size: 0.75rem; }
