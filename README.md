@@ -1,122 +1,162 @@
-# EventBoost-Pro
+<<<<<<< HEAD
+# React + TypeScript + Vite
 
-**EventBoost-Pro** is a production-ready full-stack event management and ticketing platform that enables organizers to create events, users to purchase tickets securely, and admins to manage the entire platform efficiently.
+This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
 
-Built using **React** (Frontend), **Node.js/Express** (Backend), and **MongoDB Atlas**, the platform includes real-time alerts, secure payments, automatic refunds, email reminders, profile management, advanced event lifecycle control, role-based access control, advanced search & filters, event waitlist system, and reviews & ratings.
+Currently, two official plugins are available:
+
+- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
+- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+
+## React Compiler
+
+The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+
+## Expanding the ESLint configuration
+
+If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+
+```js
+export default defineConfig([
+  globalIgnores(['dist']),
+  {
+    files: ['**/*.{ts,tsx}'],
+    extends: [
+      // Other configs...
+
+      // Remove tseslint.configs.recommended and replace with this
+      tseslint.configs.recommendedTypeChecked,
+      // Alternatively, use this for stricter rules
+      tseslint.configs.strictTypeChecked,
+      // Optionally, add this for stylistic rules
+      tseslint.configs.stylisticTypeChecked,
+
+      // Other configs...
+    ],
+    languageOptions: {
+      parserOptions: {
+        project: ['./tsconfig.node.json', './tsconfig.app.json'],
+        tsconfigRootDir: import.meta.dirname,
+      },
+      // other options...
+    },
+  },
+])
+```
+
+You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+
+```js
+// eslint.config.js
+import reactX from 'eslint-plugin-react-x'
+import reactDom from 'eslint-plugin-react-dom'
+
+export default defineConfig([
+  globalIgnores(['dist']),
+  {
+    files: ['**/*.{ts,tsx}'],
+    extends: [
+      // Other configs...
+      // Enable lint rules for React
+      reactX.configs['recommended-typescript'],
+      // Enable lint rules for React DOM
+      reactDom.configs.recommended,
+    ],
+    languageOptions: {
+      parserOptions: {
+        project: ['./tsconfig.node.json', './tsconfig.app.json'],
+        tsconfigRootDir: import.meta.dirname,
+      },
+      // other options...
+    },
+  },
+])
+```
+=======
+# 🎟 EventBoost-Pro
+
+EventBoost-Pro is a **production-ready full-stack event management and ticketing platform** that enables organizers to create events, users to purchase tickets securely, and admins to manage the entire platform efficiently.
+
+Built using **React (Frontend)**, **Node.js/Express (Backend)**, and **MongoDB Atlas**, the platform includes real-time alerts, secure payments, automatic refunds, email reminders, profile management, advanced event lifecycle control, and role-based access control.
 
 ---
 
-## 🚀 Core Features
+# 🚀 Core Features
 
----
+## 👤 Authentication & Authorization
 
-### 👤 Authentication & Authorization
 - Email & Password Registration
 - Google OAuth 2.0 Login
 - JWT-based secure authentication
 - Forgot Password (Email Reset Flow)
-- Role-Based Access: **Admin**, **Organizer**, **User**
+- Role-Based Access:
+  - Admin
+  - Organizer
+  - User
 - Middleware-based role verification
 - Organizer ownership validation for event actions
 
 ---
 
-### 🧑‍💻 User & Organizer Profile Management
+## 🧑‍💻 User & Organizer Profile Management
 
-**User Profile**
-- View and update personal information (Name, Email, Profile picture)
+### User Profile
+- View and update personal information:
+  - Name
+  - Email
+  - Profile picture
 - View purchased tickets and event history
 - Receive email reminders for upcoming events
 - Manage notification preferences
 - View refund status for cancelled events
 
-**Organizer Profile**
-- Update organizer information (Name, Email, Profile picture / Logo)
-- Manage events dashboard: Create / Update / Delete events
-- Upload event banners
-- Set ticket price & quantity
-- Send manual or automated email reminders
-- Track attendee list and ticket sales
-- Cancel own events (with auto refund system)
+### Organizer Profile
+- Update organizer information:
+  - Name
+  - Email
+  - Profile picture / Logo
+- Manage events dashboard:
+  - Create / Update / Delete events
+  - Upload event banners
+  - Set ticket price & quantity
+  - Send manual or automated email reminders
+  - Track attendee list and ticket sales
+  - Cancel own events (with auto refund system)
 - View organizer-specific statistics
 
 ---
 
-### 🎉 Advanced Event Management System
+## 🎉 Advanced Event Management System
 
-**Structured Event Lifecycle**
+### Structured Event Lifecycle
 
-| Status | Description |
-|---|---|
-| `draft` | Event saved but not submitted |
-| `pending` | Submitted, awaiting admin approval |
-| `active` | Approved and visible to users |
-| `cancelled` | Cancelled by admin or organizer |
-| `resubmitted` | Organizer updated a cancelled event |
+The platform now includes a controlled event status workflow:
 
-**Event Flow Logic**
+Event Status Types:
+- `draft`
+- `pending`
+- `active`
+- `cancelled`
+- `resubmitted`
+
+### Event Flow Logic
+
 - Organizer creates event → `pending`
 - Admin approves event → `active`
 - Admin cancels event → `cancelled`
 - Organizer updates cancelled event → `resubmitted`
 - Admin re-approves → `active`
 
-This prevents direct reactivation of cancelled events, duplicate event recreation, inconsistent dashboard states, and unauthorized status manipulation.
+This prevents:
+- Direct reactivation of cancelled events
+- Duplicate event recreation
+- Inconsistent dashboard states
+- Unauthorized status manipulation
 
 ---
 
-### 🔍 Advanced Search & Filter System *(New)*
+## 🛒 Ticket Purchase (User Side)
 
-- **Search** events by name or description (debounced, real-time)
-- **Category Filter**: Music, Tech, Food, Sports, Art, Education, Business, Health, Other
-- **City Filter**: Filter events by location
-- **Price Range**: Min and Max price filter
-- **Date Range**: Filter by start and end date
-- **Sort Options**: Newest, Oldest, Price Low→High, Price High→Low, Date Soonest
-- **Clear All Filters** button to reset
-- Results count display: *"24 events found"*
-- Mobile responsive — filters collapse on small screens
-- URL query param sync for shareable filtered links
-
----
-
-### 🎟️ Event Waitlist System *(New)*
-
-- Users can join a waitlist when an event is **sold out**
-- Waitlist position displayed: *"You are #3 on the waitlist"*
-- When a ticket is cancelled or refunded, the **next person on the waitlist is automatically notified**
-- Notified user gets **24 hours** to complete the purchase
-- If time expires, the next person in queue is notified automatically
-- Users can **leave the waitlist** at any time
-- Dedicated **Waitlist tab** in User Dashboard
-
-**Waitlist Status Types:** `waiting` → `notified` → `converted` / `expired`
-
-**Email Notifications:**
-- Waitlist confirmation with queue position
-- Spot available alert with purchase link
-- Expiry notification if purchase window missed
-
----
-
-### ⭐ Reviews & Ratings System *(New)*
-
-- Only **verified ticket holders** can leave a review (after event date)
-- **1–5 star rating** with written comment (max 500 characters)
-- One review per user per event
-- **Rating summary** on event page:
-  - Average rating with star display
-  - Total reviews count
-  - Rating breakdown bars (5★ to 1★ percentages)
-- **Verified Attendee** badge on each review
-- Event cards show average rating: ⭐ 4.3 (128)
-- Organizer profile shows overall average rating across all events
-- Users can edit or delete their own reviews
-- Admin can delete any review
-
----
-
-### 🛒 Ticket Purchase (User Side)
 - Browse & search events
 - View detailed event information
 - Secure ticket purchase via Stripe
@@ -128,95 +168,120 @@ This prevents direct reactivation of cancelled events, duplicate event recreatio
 
 ---
 
-### 💳 Payment & Refund System
+## 💳 Payment & Refund System
 
-**Secure Payment Integration**
+### Secure Payment Integration
 - Stripe Checkout integration
 - PaymentIntent stored in database
 - Secure payment verification
 - Prevent duplicate ticket generation
 - Transaction-safe payment confirmation
 
-**Automatic Refund System (Admin & Organizer)**
+### Automatic Refund System (Admin & Organizer)
 
-If an event is cancelled, the system automatically:
-- Finds all purchased tickets
-- Triggers Stripe Refund API
-- Updates booking payment status to `refunded`
-- Prevents double refunds
-- Sends refund confirmation email
-- Sends real-time cancellation notification
+If an event is cancelled:
+
+- Admin or Organizer changes event status to `cancelled`
+- System automatically:
+  - Finds all purchased tickets
+  - Triggers Stripe Refund API
+  - Updates booking payment status to `refunded`
+  - Prevents double refunds
+  - Sends refund confirmation email
+  - Sends real-time cancellation notification
 - User dashboard shows refund status instantly
 
 ---
 
-### 📢 Notifications & Email Reminders
+## 📢 Notifications & Email Reminders
 
-**Email System**
-- Automatic reminder before event date (24 hours before)
+### 📧 Email System
+
+- Automatic reminder before event date (e.g., 24 hours before event)
 - Organizer can manually trigger reminder emails
 - Refund confirmation emails
 - Event cancellation emails
 - Event approval notifications
-- Waitlist confirmation, spot available, and expiry emails *(New)*
-- Includes event name, date & time, location, and ticket number
+- Includes event details in email:
+  - Event name
+  - Date & time
+  - Location
+  - Ticket number
 
-**In-App Notifications**
+### 🔔 In-App Notifications
 
-Notifications created when:
+Notification created when:
 - Ticket purchased
 - Event updated
 - Event cancelled
 - Refund processed
 - Event resubmitted
 - Admin approves event
-- Waitlist spot becomes available *(New)*
 
-Features: stored in database, read/unread tracking, role-based filtering, real-time via Socket.io
+Features:
+- Notifications stored in database
+- Read / Unread tracking
+- Role-based notification filtering
+- Users can view notification history
+- Real-time notification using Socket.io
 
 ---
 
-### 🚨 Emergency Broadcast (Real-Time)
-- Admin can send instant alerts for event cancellations, security alerts, and maintenance announcements
-- Users join event-specific Socket.io rooms
+## 🚨 Emergency Broadcast (Real-Time)
+
+Admin can send instant alerts:
+
+- Event cancellation
+- Security alerts
+- Maintenance announcements
+
+Enhanced Socket.io Architecture:
+
+- Users join event-specific rooms:
+  event_<eventId>
 - Targeted broadcast to specific event attendees
-- Real-time alert banner and toast/modal UI
+- Real-time alert banner display
+- Toast / modal warning UI
 - Prevents unnecessary global broadcasts
 
 ---
 
-### 📊 Dashboards
+# 📊 Dashboards
 
-**🛡 Admin Dashboard**
+## 🛡 Admin Dashboard
 - Manage users & organizers
 - Approve / Reject events
-- Cancel events & trigger automatic refunds
+- Cancel events
+- Trigger automatic refunds
 - Send emergency broadcasts
-- View revenue statistics and ticket sales overview
+- View revenue statistics
+- View ticket sales overview
 - Monitor event lifecycle states
 
-**🎯 Organizer Dashboard**
-- Create / Update / Delete / Cancel own events
-- View ticket sales and attendees
+## 🎯 Organizer Dashboard
+- Manage own events
+- Create / Update / Delete events
+- Cancel own events (auto refund enabled)
+- View ticket sales
+- View attendees
 - Send event reminders
 - Update organizer profile
 - Track event status (pending / active / cancelled / resubmitted)
 
-**👥 User Dashboard**
-- View purchased tickets & download PDF
+## 👥 User Dashboard
+- View purchased tickets
+- Download ticket PDF
 - View refund status
 - View notification history
 - Update personal profile
 - Track event participation
-- Manage waitlist entries *(New)*
-- View and manage own reviews *(New)*
 - Real-time event cancellation alerts
 
 ---
 
-## 🗂 Tech Stack
+# 🗂 Tech Stack
 
-**Frontend**
+### Frontend
 - React + Vite
 - Tailwind CSS
 - Shadcn UI
@@ -225,23 +290,25 @@ Features: stored in database, read/unread tracking, role-based filtering, real-t
 - Axios
 - Socket.io Client
 
-**Backend**
-- Node.js + Express.js
+### Backend
+- Node.js
+- Express.js
 - MongoDB + Mongoose
 - JWT Authentication
 - Passport.js (Google OAuth)
-- Socket.io (Room-Based Real-Time)
+- Socket.io (Room-Based Real-Time System)
 - Stripe API
-- Nodemailer
+- Nodemailer (Email System)
 
-**Dev Tools**
+### Dev Tools
 - Nodemon
 - Dotenv
 - CORS
 
 ---
 
-## 🔐 Security Features
+# 🔐 Security Features
+
 - Password hashing using bcrypt
 - JWT protected routes
 - Role-based route protection
@@ -255,82 +322,11 @@ Features: stored in database, read/unread tracking, role-based filtering, real-t
 
 ---
 
-## 🔧 Project Setup
+# 🔧 Project Setup
 
-### 1️⃣ Clone Repository
+## 1️⃣ Clone Repository
+
 ```bash
 git clone <your-github-repo-url>
 cd eventboost-pro
-```
-
-### 2️⃣ Backend Setup
-```bash
-cd backend
-npm install
-```
-
-Create `.env` file in `/backend`:
-```env
-MONGO_URI=mongodb+srv://<username>:<password>@<cluster>.mongodb.net/eventboost?retryWrites=true&w=majority&tls=true&tlsAllowInvalidCertificates=true
-JWT_SECRET=your_jwt_secret
-STRIPE_SECRET_KEY=your_stripe_secret
-STRIPE_WEBHOOK_SECRET=your_stripe_webhook_secret
-EMAIL_USER=your_email
-EMAIL_PASS=your_email_password
-FRONTEND_URL=http://localhost:5173
-CLOUDINARY_CLOUD_NAME=your_cloud_name
-CLOUDINARY_API_KEY=your_api_key
-CLOUDINARY_API_SECRET=your_api_secret
-GOOGLE_CLIENT_ID=your_google_client_id
-GOOGLE_CLIENT_SECRET=your_google_client_secret
-```
-
-Start backend:
-```bash
-npx nodemon
-```
-
-### 3️⃣ Frontend Setup
-```bash
-cd frontend
-npm install
-npm run dev
-```
-
-Open in browser: `http://localhost:5173`
-
----
-
-## 📁 Project Structure
-
-```
-eventboost-pro/
-├── backend/
-│   ├── config/          # DB, Passport, Socket config
-│   ├── controllers/     # Route controllers
-│   ├── middleware/      # Auth & role middleware
-│   ├── models/          # Mongoose models
-│   ├── routes/          # API routes
-│   ├── services/        # Email, cron schedulers
-│   ├── utils/           # Helper functions
-│   └── server.js
-├── frontend/
-│   ├── src/
-│   │   ├── components/  # Reusable UI components
-│   │   ├── pages/       # Page components
-│   │   ├── context/     # React context
-│   │   ├── hooks/       # Custom hooks
-│   │   └── utils/       # Helper functions
-│   └── index.html
-└── README.md
-```
-
----
-
-## 🌐 Live Demo
-
-[https://event-boost-pro.vercel.app](https://event-boost-pro.vercel.app)
-
----
-
-*Built with ❤️ — EventBoost-Pro © 2025*
+>>>>>>> 02731add07b4c12bb185b133323880abf65de305
