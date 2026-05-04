@@ -49,9 +49,9 @@ const CheckoutButton: React.FC<CheckoutButtonProps> = ({ eventId, quantity, pric
       onClick={handleCheckout}
       disabled={loading || isOwner || isAdmin}
       className={`w-full mt-6 py-4 px-8 rounded-2xl font-bold flex items-center justify-center gap-3 transition-all ${
-        isOwner || isAdmin 
-          ? 'bg-gray-100 text-gray-400 border border-gray-200 cursor-not-allowed shadow-none' 
-          : 'gradient-primary text-white shadow-xl shadow-indigo-100 hover:shadow-indigo-200'
+        isOwner || isAdmin
+          ? 'bg-[#1A2B3D] text-[#5A7A94] border border-[#2E4A63] cursor-not-allowed shadow-none'
+          : 'bg-[#C9A84C] text-[#0F1C2E] shadow-xl hover:bg-[#b8963e]'
       } disabled:opacity-70`}
     >
       {loading ? (

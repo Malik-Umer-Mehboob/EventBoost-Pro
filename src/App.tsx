@@ -88,7 +88,21 @@ const App = () => {
             <Route path="*" element={<Navigate to="/" />} />
           </Routes>
         </Router>
-        <Toaster position="top-right" richColors />
+        <Toaster 
+          position="top-right"
+          toastOptions={{
+            style: {
+              background: '#1A2B3D',
+              color: '#EDF2F7',
+              border: '1px solid #2E4A63',
+              borderRadius: '10px',
+              fontSize: '13px',
+              fontWeight: '500',
+              padding: '12px 16px',
+              boxShadow: '0 8px 32px rgba(0,0,0,0.4)',
+            },
+          }}
+        />
       </SocketProvider>
     </AuthProvider>
   );

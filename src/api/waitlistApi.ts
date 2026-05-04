@@ -15,11 +15,6 @@ export const getWaitlistPosition = async (eventId: string) => {
   return data;
 };
 
-export const getEventWaitlist = async (eventId: string) => {
-  const { data } = await api.get(`/waitlist/${eventId}`);
-  return data;
-};
-
 export const getMyWaitlist = async () => {
   const { data } = await api.get('/waitlist/my-waitlist');
   return data;

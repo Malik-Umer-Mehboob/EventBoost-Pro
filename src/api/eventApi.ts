@@ -30,8 +30,8 @@ export const getEventById = async (id: string) => {
   return data;
 };
 
-export const getPublicEvents = async () => {
-  const { data } = await api.get('/events/public');
+export const getPublicEvents = async (params?: any) => {
+  const { data } = await api.get('/events/public', { params });
   return data;
 };
 

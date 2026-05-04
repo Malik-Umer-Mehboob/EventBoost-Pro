@@ -1,64 +1,76 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Search, Filter, X, Calendar, MapPin, Tag, ChevronDown, SlidersHorizontal, ArrowUpDown } from 'lucide-react';
+import { Search, X, Calendar, MapPin, DollarSign, SortAsc, SlidersHorizontal, ChevronDown } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 interface FilterBarProps {
   onFilterChange: (filters: any) => void;
   totalResults: number;
-  initialFilters?: any;
 }
 
-const CATEGORIES = ['All', 'Music', 'Tech', 'Food', 'Sports', 'Art', 'Education', 'Business', 'Health', 'Other'];
+const CATEGORIES = [
+  'All',
+  'Music',
+  'Tech',
+  'Food',
+  'Sports',
+  'Art',
+  'Education',
+  'Business',
+  'Health',
+  'Other',
+];
 
-const FilterBar: React.FC<FilterBarProps> = ({ onFilterChange, totalResults, initialFilters = {} }) => {
-  const [isExpanded, setIsExpanded] = useState(false);
-  const [filters, setFilters] = useState({
-    search: initialFilters.search || '',
-    category: initialFilters.category || 'All',
-    city: initialFilters.city || '',
-    minPrice: initialFilters.minPrice || '',
-    maxPrice: initialFilters.maxPrice || '',
-    startDate: initialFilters.startDate || '',
-    endDate: initialFilters.endDate || '',
-    sort: initialFilters.sort || 'newest',
-  });
+const FilterBar: React.FC<FilterBarProps> = ({ onFilterChange, totalResults }) => {
+  const [isMobileOpen, setIsMobileOpen] = useState(false);
+  
+  // Get initial state from URL
+  const getInitialFilters = () => {
+    const params = new URLSearchParams(window.location.search);
+    return {
+      search: params.get('search') || '',
+      category: params.get('category') || 'All',
+      city: params.get('city') || '',
+      minPrice: params.get('minPrice') || '',
+      maxPrice: params.get('maxPrice') || '',
+      startDate: params.get('startDate') || '',
+      endDate: params.get('endDate') || '',
+      sort: params.get('sort') || 'newest',
+    };
+  };
 
+  const [filters, setFilters] = useState(getInitialFilters());
   const [debouncedSearch, setDebouncedSearch] = useState(filters.search);
 
-  // Debounce search
+  // Debounce search term
   useEffect(() => {
     const timer = setTimeout(() => {
-      setFilters(prev => ({ ...prev, search: debouncedSearch }));
+      setDebouncedSearch(filters.search);
     }, 500);
     return () => clearTimeout(timer);
-  }, [debouncedSearch]);
+  }, [filters.search]);
 
-  // Sync state when initialFilters change (e.g. from URL)
-  const initialFiltersString = JSON.stringify(initialFilters);
+  // Trigger filter change when filters or debounced search changes
   useEffect(() => {
-    const parsedFilters = JSON.parse(initialFiltersString);
-    if (Object.keys(parsedFilters).length > 0) {
-        setFilters(prev => {
-            const next = { ...prev, ...parsedFilters };
-            if (JSON.stringify(prev) === JSON.stringify(next)) return prev;
-            return next;
-        });
-        setDebouncedSearch(prev => prev !== (parsedFilters.search || '') ? (parsedFilters.search || '') : prev);
-    }
-  }, [initialFiltersString]);
-
-  // Trigger onFilterChange when filters change
-  useEffect(() => {
-    onFilterChange(filters);
-  }, [filters, onFilterChange]);
+    const activeFilters = { ...filters, search: debouncedSearch };
+    onFilterChange(activeFilters);
+  }, [
+    debouncedSearch,
+    filters.category,
+    filters.city,
+    filters.minPrice,
+    filters.maxPrice,
+    filters.startDate,
+    filters.endDate,
+    filters.sort,
+  ]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
-    setFilters(prev => ({ ...prev, [name]: value }));
+    setFilters((prev) => ({ ...prev, [name]: value }));
   };
 
-  const clearFilters = () => {
-    const defaultFilters = {
+  const handleClearFilters = () => {
+    setFilters({
       search: '',
       category: 'All',
       city: '',
@@ -67,198 +79,190 @@ const FilterBar: React.FC<FilterBarProps> = ({ onFilterChange, totalResults, ini
       startDate: '',
       endDate: '',
       sort: 'newest',
-    };
-    setFilters(defaultFilters);
-    setDebouncedSearch('');
+    });
   };
 
-  const activeFiltersCount = Object.entries(filters).filter(([key, value]) => {
-    if (key === 'sort') return false;
-    if (key === 'category' && value === 'All') return false;
-    return value !== '';
-  }).length;
+  const FilterInputs = () => (
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      {/* Category Dropdown */}
+      <div className="space-y-1.5">
+        <label className="text-[13px] font-medium text-[#7A94AA] ml-1">Category</label>
+        <div className="relative group">
+          <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 text-[#5A7A94] w-4 h-4 pointer-events-none group-focus-within:text-[#C9A84C] transition-colors" />
+          <select
+            name="category"
+            value={filters.category}
+            onChange={handleInputChange}
+            className="w-full pl-4 pr-10 py-3 bg-[#0F1C2E] border border-[#2E4A63] rounded-xl text-[#EDF2F7] focus:border-[#C9A84C] outline-none transition-all appearance-none cursor-pointer text-sm"
+          >
+            {CATEGORIES.map((cat) => (
+              <option key={cat} value={cat}>
+                {cat}
+              </option>
+            ))}
+          </select>
+        </div>
+      </div>
+
+      {/* City Filter */}
+      <div className="space-y-1.5">
+        <label className="text-[13px] font-medium text-[#7A94AA] ml-1">Location</label>
+        <div className="relative group">
+          <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 text-[#5A7A94] group-focus-within:text-[#C9A84C] transition-colors w-4 h-4" />
+          <input
+            type="text"
+            name="city"
+            placeholder="Filter by city..."
+            value={filters.city}
+            onChange={handleInputChange}
+            className="w-full pl-11 pr-4 py-3 bg-[#0F1C2E] border border-[#2E4A63] rounded-xl text-[#EDF2F7] placeholder-[#3D5A73] focus:border-[#C9A84C] outline-none transition-all text-sm"
+          />
+        </div>
+      </div>
+
+      {/* Price Range */}
+      <div className="space-y-1.5">
+        <label className="text-[13px] font-medium text-[#7A94AA] ml-1">Price Range</label>
+        <div className="flex gap-2">
+          <div className="relative group flex-1">
+            <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 text-[#5A7A94] group-focus-within:text-[#C9A84C] transition-colors w-3.5 h-3.5" />
+            <input
+              type="number"
+              name="minPrice"
+              placeholder="Min"
+              value={filters.minPrice}
+              onChange={handleInputChange}
+              className="w-full pl-8 pr-3 py-3 bg-[#0F1C2E] border border-[#2E4A63] rounded-xl text-[#EDF2F7] placeholder-[#3D5A73] focus:border-[#C9A84C] outline-none transition-all text-sm"
+            />
+          </div>
+          <div className="relative group flex-1">
+            <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 text-[#5A7A94] group-focus-within:text-[#C9A84C] transition-colors w-3.5 h-3.5" />
+            <input
+              type="number"
+              name="maxPrice"
+              placeholder="Max"
+              value={filters.maxPrice}
+              onChange={handleInputChange}
+              className="w-full pl-8 pr-3 py-3 bg-[#0F1C2E] border border-[#2E4A63] rounded-xl text-[#EDF2F7] placeholder-[#3D5A73] focus:border-[#C9A84C] outline-none transition-all text-sm"
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* Sort By */}
+      <div className="space-y-1.5">
+        <label className="text-[13px] font-medium text-[#7A94AA] ml-1">Sort By</label>
+        <div className="relative group">
+          <SortAsc className="absolute left-4 top-1/2 -translate-y-1/2 text-[#5A7A94] group-focus-within:text-[#C9A84C] transition-colors w-4 h-4 pointer-events-none" />
+          <select
+            name="sort"
+            value={filters.sort}
+            onChange={handleInputChange}
+            className="w-full pl-11 pr-10 py-3 bg-[#0F1C2E] border border-[#2E4A63] rounded-xl text-[#EDF2F7] focus:border-[#C9A84C] outline-none transition-all appearance-none cursor-pointer text-sm"
+          >
+            <option value="newest">Newest First</option>
+            <option value="oldest">Oldest First</option>
+            <option value="price_low">Price: Low to High</option>
+            <option value="price_high">Price: High to Low</option>
+            <option value="date_soon">Date: Soonest First</option>
+          </select>
+          <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 text-[#5A7A94] w-4 h-4 pointer-events-none" />
+        </div>
+      </div>
+
+      {/* Date Range */}
+      <div className="lg:col-span-2 grid grid-cols-2 gap-4">
+        <div className="space-y-1.5">
+          <label className="text-[13px] font-medium text-[#7A94AA] ml-1">Start Date</label>
+          <div className="relative group">
+            <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 text-[#5A7A94] group-focus-within:text-[#C9A84C] transition-colors w-4 h-4" />
+            <input
+              type="date"
+              name="startDate"
+              value={filters.startDate}
+              onChange={handleInputChange}
+              className="w-full pl-11 pr-4 py-3 bg-[#0F1C2E] border border-[#2E4A63] rounded-xl text-[#EDF2F7] focus:border-[#C9A84C] outline-none transition-all text-sm [color-scheme:dark]"
+            />
+          </div>
+        </div>
+        <div className="space-y-1.5">
+          <label className="text-[13px] font-medium text-[#7A94AA] ml-1">End Date</label>
+          <div className="relative group">
+            <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 text-[#5A7A94] group-focus-within:text-[#C9A84C] transition-colors w-4 h-4" />
+            <input
+              type="date"
+              name="endDate"
+              value={filters.endDate}
+              onChange={handleInputChange}
+              className="w-full pl-11 pr-4 py-3 bg-[#0F1C2E] border border-[#2E4A63] rounded-xl text-[#EDF2F7] focus:border-[#C9A84C] outline-none transition-all text-sm [color-scheme:dark]"
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* Results Count & Clear */}
+      <div className="lg:col-span-2 flex items-end justify-between gap-4">
+        <div className="flex flex-col justify-end pb-1 px-1">
+          <span className="text-[#5A7A94] text-sm font-medium">
+            {totalResults} {totalResults === 1 ? 'event' : 'events'} found
+          </span>
+        </div>
+        <button
+          onClick={handleClearFilters}
+          className="flex items-center gap-2 px-6 py-3 bg-transparent border border-[#2E4A63] rounded-xl text-[#B8C5D3] hover:text-[#C9A84C] hover:border-[#C9A84C] transition-all text-sm font-semibold whitespace-nowrap"
+        >
+          <X className="w-4 h-4" />
+          Clear All Filters
+        </button>
+      </div>
+    </div>
+  );
 
   return (
-    <div className="w-full mb-10 relative z-20">
-      {/* Main Bar */}
-      <div className="bg-[#162333] border border-[#2E4A63] rounded-[24px] p-2 md:p-3 shadow-2xl transition-all duration-300">
-        <div className="flex flex-col lg:flex-row items-center gap-3">
-          
-          {/* Search Input */}
-          <div className="relative flex-grow w-full">
-            <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-[#3D5A73] w-5 h-5" />
+    <div className="bg-[#162333] border border-[#2E4A63] rounded-[32px] p-6 mb-10 shadow-xl overflow-hidden">
+      <div className="space-y-6">
+        {/* Search & Toggle Row */}
+        <div className="flex gap-4">
+          <div className="relative flex-1 group">
+            <Search className="absolute left-5 top-1/2 -translate-y-1/2 text-[#5A7A94] group-focus-within:text-[#C9A84C] transition-colors w-5 h-5" />
             <input
               type="text"
-              placeholder="Search events..."
-              value={debouncedSearch}
-              onChange={(e) => setDebouncedSearch(e.target.value)}
-              className="w-full pl-12 pr-4 py-3.5 bg-[#0F1C2E] border border-[#2E4A63] rounded-2xl text-[#EDF2F7] placeholder-[#3D5A73] focus:outline-none focus:border-[#C9A84C] transition-all text-sm font-medium"
+              name="search"
+              placeholder="Search events by title or description..."
+              value={filters.search}
+              onChange={handleInputChange}
+              className="w-full pl-14 pr-6 py-4 bg-[#0F1C2E] border border-[#2E4A63] rounded-2xl text-[#EDF2F7] placeholder-[#3D5A73] focus:border-[#C9A84C] outline-none transition-all text-lg"
             />
           </div>
 
-          {/* Quick Actions */}
-          <div className="flex items-center gap-2 w-full lg:w-auto">
-            <button
-              onClick={() => setIsExpanded(!isExpanded)}
-              className={`flex items-center justify-center gap-2 px-5 py-3.5 rounded-2xl font-bold text-sm transition-all flex-grow lg:flex-grow-0 whitespace-nowrap ${
-                isExpanded || activeFiltersCount > 0 
-                  ? 'bg-[#C9A84C] text-[#162333]' 
-                  : 'bg-[#1A2B3D] text-[#EDF2F7] border border-[#2E4A63]'
-              }`}
-            >
-              <SlidersHorizontal className="w-4 h-4" />
-              Filters
-              {activeFiltersCount > 0 && (
-                <span className="ml-1 bg-[#162333] text-[#C9A84C] px-2 py-0.5 rounded-full text-[10px]">
-                  {activeFiltersCount}
-                </span>
-              )}
-            </button>
-
-            <div className="relative w-full lg:w-48">
-              <ArrowUpDown className="absolute left-4 top-1/2 transform -translate-y-1/2 text-[#3D5A73] w-4 h-4" />
-              <select
-                name="sort"
-                value={filters.sort}
-                onChange={handleInputChange}
-                className="w-full pl-11 pr-4 py-3.5 bg-[#1A2B3D] border border-[#2E4A63] rounded-2xl text-[#EDF2F7] focus:outline-none focus:border-[#C9A84C] transition-all text-sm font-bold appearance-none cursor-pointer"
-              >
-                <option value="newest">Newest First</option>
-                <option value="oldest">Oldest First</option>
-                <option value="price_low">Price: Low to High</option>
-                <option value="price_high">Price: High to Low</option>
-                <option value="date_soon">Date: Soonest First</option>
-              </select>
-              <ChevronDown className="absolute right-4 top-1/2 transform -translate-y-1/2 text-[#3D5A73] w-4 h-4 pointer-events-none" />
-            </div>
-          </div>
+          <button
+            onClick={() => setIsMobileOpen(!isMobileOpen)}
+            className="lg:hidden flex items-center gap-2 px-6 bg-[#0F1C2E] border border-[#2E4A63] rounded-2xl text-[#B8C5D3] hover:text-[#C9A84C] transition-all"
+          >
+            <SlidersHorizontal className="w-5 h-5" />
+            <span className="font-semibold">Filters</span>
+          </button>
         </div>
 
-        {/* Expanded Filters */}
+        {/* Desktop Filters */}
+        <div className="hidden lg:block">
+          <FilterInputs />
+        </div>
+
+        {/* Mobile Filters */}
         <AnimatePresence>
-          {isExpanded && (
+          {isMobileOpen && (
             <motion.div
               initial={{ height: 0, opacity: 0 }}
               animate={{ height: 'auto', opacity: 1 }}
               exit={{ height: 0, opacity: 0 }}
-              className="overflow-hidden"
+              transition={{ duration: 0.3 }}
+              className="lg:hidden border-t border-[#2E4A63] pt-6 overflow-hidden"
             >
-              <div className="pt-6 pb-2 px-2 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 border-t border-[#2E4A63] mt-4">
-                
-                {/* Category */}
-                <div className="space-y-2">
-                  <label className="text-[11px] font-black uppercase tracking-widest text-[#7A94AA] ml-1">Category</label>
-                  <div className="relative">
-                    <Tag className="absolute left-4 top-1/2 transform -translate-y-1/2 text-[#3D5A73] w-4 h-4" />
-                    <select
-                      name="category"
-                      value={filters.category}
-                      onChange={handleInputChange}
-                      className="w-full pl-11 pr-4 py-3 bg-[#0F1C2E] border border-[#2E4A63] rounded-xl text-[#EDF2F7] focus:outline-none focus:border-[#C9A84C] transition-all text-sm appearance-none"
-                    >
-                      {CATEGORIES.map(cat => <option key={cat} value={cat}>{cat}</option>)}
-                    </select>
-                    <ChevronDown className="absolute right-4 top-1/2 transform -translate-y-1/2 text-[#3D5A73] w-4 h-4 pointer-events-none" />
-                  </div>
-                </div>
-
-                {/* City */}
-                <div className="space-y-2">
-                  <label className="text-[11px] font-black uppercase tracking-widest text-[#7A94AA] ml-1">Location</label>
-                  <div className="relative">
-                    <MapPin className="absolute left-4 top-1/2 transform -translate-y-1/2 text-[#3D5A73] w-4 h-4" />
-                    <input
-                      type="text"
-                      name="city"
-                      placeholder="Filter by city..."
-                      value={filters.city}
-                      onChange={handleInputChange}
-                      className="w-full pl-11 pr-4 py-3 bg-[#0F1C2E] border border-[#2E4A63] rounded-xl text-[#EDF2F7] placeholder-[#3D5A73] focus:outline-none focus:border-[#C9A84C] transition-all text-sm"
-                    />
-                  </div>
-                </div>
-
-                {/* Price Range */}
-                <div className="space-y-2">
-                  <label className="text-[11px] font-black uppercase tracking-widest text-[#7A94AA] ml-1">Price Range</label>
-                  <div className="flex items-center gap-2">
-                    <input
-                      type="number"
-                      name="minPrice"
-                      placeholder="Min"
-                      value={filters.minPrice}
-                      onChange={handleInputChange}
-                      className="w-full px-4 py-3 bg-[#0F1C2E] border border-[#2E4A63] rounded-xl text-[#EDF2F7] placeholder-[#3D5A73] focus:outline-none focus:border-[#C9A84C] transition-all text-sm"
-                    />
-                    <span className="text-[#3D5A73]">—</span>
-                    <input
-                      type="number"
-                      name="maxPrice"
-                      placeholder="Max"
-                      value={filters.maxPrice}
-                      onChange={handleInputChange}
-                      className="w-full px-4 py-3 bg-[#0F1C2E] border border-[#2E4A63] rounded-xl text-[#EDF2F7] placeholder-[#3D5A73] focus:outline-none focus:border-[#C9A84C] transition-all text-sm"
-                    />
-                  </div>
-                </div>
-
-                {/* Date Range */}
-                <div className="space-y-2">
-                  <label className="text-[11px] font-black uppercase tracking-widest text-[#7A94AA] ml-1">Date Range</label>
-                  <div className="flex items-center gap-2">
-                    <div className="relative w-full">
-                      <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[#3D5A73] w-3.5 h-3.5" />
-                      <input
-                        type="date"
-                        name="startDate"
-                        value={filters.startDate}
-                        onChange={handleInputChange}
-                        className="w-full pl-9 pr-2 py-3 bg-[#0F1C2E] border border-[#2E4A63] rounded-xl text-[#EDF2F7] focus:outline-none focus:border-[#C9A84C] transition-all text-[11px]"
-                      />
-                    </div>
-                    <span className="text-[#3D5A73]">to</span>
-                    <div className="relative w-full">
-                      <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[#3D5A73] w-3.5 h-3.5" />
-                      <input
-                        type="date"
-                        name="endDate"
-                        value={filters.endDate}
-                        onChange={handleInputChange}
-                        className="w-full pl-9 pr-2 py-3 bg-[#0F1C2E] border border-[#2E4A63] rounded-xl text-[#EDF2F7] focus:outline-none focus:border-[#C9A84C] transition-all text-[11px]"
-                      />
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Clear Filters Button */}
-              <div className="mt-4 flex justify-end">
-                <button
-                  onClick={clearFilters}
-                  className="flex items-center gap-2 px-4 py-2 text-[#B8C5D3] hover:text-white border border-[#2E4A63] rounded-xl text-xs font-bold transition-all hover:bg-[#1A2B3D]"
-                >
-                  <X className="w-3.5 h-3.5" />
-                  Clear All Filters
-                </button>
-              </div>
+              <FilterInputs />
             </motion.div>
           )}
         </AnimatePresence>
-      </div>
-
-      {/* Results Count */}
-      <div className="mt-4 flex items-center justify-between px-2">
-        <p className="text-[#5A7A94] text-sm font-medium">
-          {totalResults} {totalResults === 1 ? 'event' : 'events'} found
-        </p>
-        {activeFiltersCount > 0 && !isExpanded && (
-            <button 
-                onClick={clearFilters}
-                className="text-[10px] text-[#C9A84C] font-black uppercase tracking-widest hover:opacity-80 transition-all"
-            >
-                Reset Filters
-            </button>
-        )}
       </div>
     </div>
   );

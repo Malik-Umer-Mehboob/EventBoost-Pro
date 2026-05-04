@@ -1,10 +1,10 @@
-const Logo = ({ size = 'md' }: { size?: 'sm' | 'md' | 'lg' }) => {
-  const sizes = {
-    sm: { text: 'text-lg', dot: 'w-2 h-2' },
-    md: { text: 'text-2xl', dot: 'w-3 h-3' },
-    lg: { text: 'text-4xl', dot: 'w-4 h-4' },
-  };
+import React from 'react';
 
+interface LogoProps {
+  size?: 'sm' | 'md' | 'lg';
+}
+
+const Logo: React.FC<LogoProps> = ({ size = 'md' }) => {
   return (
     <div className="flex items-center gap-2">
       {/* Icon mark */}

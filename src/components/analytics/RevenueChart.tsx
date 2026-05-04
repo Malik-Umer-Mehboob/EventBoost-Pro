@@ -36,8 +36,8 @@ interface CustomTooltipProps {
 const CustomTooltip = ({ active, payload, label }: CustomTooltipProps) => {
   if (active && payload && payload.length) {
     return (
-      <div className="bg-white p-5 border border-gray-100 shadow-[0_8px_30px_rgb(0,0,0,0.12)] rounded-[24px] min-w-[160px]">
-        <p className="text-[10px] font-black text-indigo-600 uppercase tracking-widest mb-2 border-b border-gray-50 pb-2">
+      <div className="bg-[#162333] p-5 border border-[#2E4A63] shadow-[0_8px_30px_rgb(0,0,0,0.4)] rounded-[24px] min-w-[160px]">
+        <p className="text-[10px] font-black text-[#C9A84C] uppercase tracking-widest mb-2 border-b border-[#1A2B3D] pb-2">
           {label}
         </p>
         <div className="space-y-1.5">
@@ -45,9 +45,9 @@ const CustomTooltip = ({ active, payload, label }: CustomTooltipProps) => {
             <div key={entry.dataKey} className="flex items-center justify-between gap-4">
               <div className="flex items-center gap-2">
                 <div className="w-2 h-2 rounded-full" style={{ backgroundColor: entry.color }} />
-                <span className="text-xs font-bold text-gray-500">{entry.name}</span>
+                <span className="text-xs font-bold text-[#7A94AA]">{entry.name}</span>
               </div>
-              <span className="text-xs font-black text-gray-900">
+              <span className="text-xs font-black text-[#EDF2F7]">
                 {typeof entry.value === 'number' && entry.name.toLowerCase().includes('revenue')
                   ? `$${entry.value.toLocaleString()}`
                   : entry.value.toLocaleString()}
@@ -64,8 +64,8 @@ const CustomTooltip = ({ active, payload, label }: CustomTooltipProps) => {
 const RevenueChart: React.FC<RevenueChartProps> = ({ data, lines, title, height = 280 }) => {
   if (!data || data.length === 0) {
     return (
-      <div className="flex items-center justify-center rounded-3xl bg-slate-50 border-2 border-dashed border-gray-200" style={{ height }}>
-        <p className="text-gray-400 font-bold text-sm uppercase tracking-widest">No chart data yet</p>
+      <div className="flex items-center justify-center rounded-3xl bg-[#1A2B3D] border-2 border-dashed border-[#2E4A63]" style={{ height }}>
+        <p className="text-[#5A7A94] font-bold text-sm uppercase tracking-widest">No chart data yet</p>
       </div>
     );
   }

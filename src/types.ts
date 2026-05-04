@@ -8,6 +8,8 @@ export interface User {
     url: string;
     public_id?: string;
   };
+  averageRating?: number;
+  totalReviews?: number;
 }
 
 export interface Event {
@@ -35,6 +37,8 @@ export interface Event {
   };
   attendees?: string[];
   status?: 'active' | 'cancelled' | 'resubmitted';
+  averageRating?: number;
+  totalReviews?: number;
 }
 
 export interface Booking {

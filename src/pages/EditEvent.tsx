@@ -65,14 +65,14 @@ const EditEvent: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center pt-24">
-        <Loader2 className="w-12 h-12 text-indigo-600 animate-spin" />
+      <div className="min-h-screen bg-[#0F1C2E] flex items-center justify-center pt-24">
+        <Loader2 className="w-12 h-12 text-[#C9A84C] animate-spin" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 py-12 px-4 sm:px-6 lg:px-8 pt-24">
+    <div className="min-h-screen bg-[#0F1C2E] py-12 px-4 sm:px-6 lg:px-8 pt-24">
       <div className="max-w-4xl mx-auto mb-8">
         <motion.div
             initial={{ opacity: 0, x: -20 }}
@@ -80,13 +80,13 @@ const EditEvent: React.FC = () => {
         >
             <button 
                 onClick={() => navigate(-1)}
-                className="flex items-center gap-2 text-gray-500 hover:text-indigo-600 transition-colors font-medium mb-2"
+                className="flex items-center gap-2 text-[#5A7A94] hover:text-[#C9A84C] transition-colors font-medium mb-2"
             >
                 <ArrowLeft className="w-5 h-5" />
                 Back
             </button>
-            <h1 className="text-4xl font-black text-gray-900 flex items-center gap-3">
-                <Edit3 className="text-indigo-600 w-8 h-8" />
+            <h1 className="text-4xl font-black text-[#EDF2F7] flex items-center gap-3">
+                <Edit3 className="text-[#C9A84C] w-8 h-8" />
                 Edit Event
             </h1>
         </motion.div>

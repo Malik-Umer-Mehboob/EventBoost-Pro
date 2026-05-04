@@ -69,10 +69,10 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
 
   return (
     <div className="space-y-2">
-      <label className="text-sm font-black text-gray-700 uppercase tracking-widest px-1">
+      <label className="text-xs font-black text-[#B8C5D3] uppercase tracking-widest px-1">
         {label}
       </label>
-      
+
       <div
         onClick={() => fileInputRef.current?.click()}
         onDragOver={onDragOver}
@@ -81,9 +81,9 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
         className={`relative cursor-pointer rounded-2xl border-2 border-dashed transition-all group overflow-hidden ${
           aspectRatio === 'video' ? 'aspect-video' : 'aspect-square'
         } ${
-          isDragging 
-            ? 'border-indigo-400 bg-indigo-50' 
-            : 'border-gray-200 hover:border-indigo-300 bg-white'
+          isDragging
+            ? 'border-[#C9A84C] bg-[#C9A84C]/5'
+            : 'border-[#2E4A63] hover:border-[#C9A84C]/50 bg-[#0F1C2E]'
         }`}
       >
         <input
@@ -122,11 +122,11 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
               exit={{ opacity: 0 }}
               className="absolute inset-0 flex flex-col items-center justify-center p-6 text-center"
             >
-              <div className="p-4 bg-indigo-50 rounded-2xl text-indigo-500 mb-4 group-hover:scale-110 transition-transform">
+              <div className="p-4 bg-[#C9A84C]/10 rounded-2xl text-[#C9A84C] mb-4 group-hover:scale-110 transition-transform border border-[#C9A84C]/20">
                 <Upload className="w-8 h-8" />
               </div>
-              <p className="text-sm font-bold text-gray-700">Drop your image here</p>
-              <p className="text-xs text-gray-400 mt-1">PNG, JPG or JPEG (Max. 5MB)</p>
+              <p className="text-sm font-bold text-[#B8C5D3]">Drop your image here</p>
+              <p className="text-xs text-[#5A7A94] mt-1">PNG, JPG or JPEG (Max. 5MB)</p>
             </motion.div>
           )}
         </AnimatePresence>
