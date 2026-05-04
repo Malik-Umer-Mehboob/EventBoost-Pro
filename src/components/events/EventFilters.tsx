@@ -36,24 +36,24 @@ const EventFilters: React.FC<EventFiltersProps> = ({ onSearch, onFilterChange })
   };
 
   return (
-    <div className="space-y-6 mb-12">
+    <div className="space-y-6 mb-8">
       <div className="flex flex-col md:flex-row gap-4">
         {/* Search Bar */}
         <div className="relative flex-1 group">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-navy-500 group-focus-within:text-gold transition-colors w-5 h-5" />
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-indigo-600 transition-colors w-5 h-5" />
           <input
             type="text"
             placeholder="Search events by title..."
             value={searchTerm}
             onChange={handleSearch}
-            className="w-full pl-12 pr-4 py-4 glass rounded-2xl focus:ring-2 focus:ring-gold/30 transition-all outline-none text-lg text-navy-100 placeholder-navy-500"
+            className="w-full pl-12 pr-4 py-4 glass rounded-2xl focus:ring-2 focus:ring-indigo-500 transition-all outline-none text-lg"
           />
         </div>
 
         {/* Mobile Filter Toggle (Optional) */}
-        <button className="md:hidden glass px-6 py-4 rounded-2xl flex items-center justify-between font-black text-navy-200 uppercase tracking-widest text-[10px]">
+        <button className="md:hidden glass px-6 py-4 rounded-2xl flex items-center justify-between font-semibold text-gray-700">
           <span className="flex items-center gap-2">
-            <SlidersHorizontal className="w-5 h-5 text-gold" />
+            <SlidersHorizontal className="w-5 h-5 text-indigo-600" />
             Filters
           </span>
           <ChevronDown className="w-5 h-5" />
@@ -61,17 +61,17 @@ const EventFilters: React.FC<EventFiltersProps> = ({ onSearch, onFilterChange })
       </div>
 
       {/* Category Pills */}
-      <div className="flex flex-wrap gap-3 overflow-x-auto pb-2 scrollbar-hide">
+      <div className="flex flex-wrap gap-2 overflow-x-auto pb-2 scrollbar-hide">
         {categories.map((cat) => (
           <motion.button
             key={cat}
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             onClick={() => handleCategoryClick(cat)}
-            className={`px-8 py-2.5 rounded-full font-black text-[10px] uppercase tracking-widest transition-all whitespace-nowrap border ${
+            className={`px-6 py-2 rounded-full font-medium transition-all whitespace-nowrap ${
               activeCategory === cat
-                ? 'bg-gold text-navy-900 border-gold shadow-lg shadow-gold/20'
-                : 'glass text-navy-400 border-navy-600/50 hover:text-gold hover:border-gold/30'
+                ? 'gradient-primary text-white shadow-lg shadow-indigo-200'
+                : 'glass text-gray-600 hover:text-indigo-600'
             }`}
           >
             {cat}

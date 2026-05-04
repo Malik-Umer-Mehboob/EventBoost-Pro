@@ -15,7 +15,7 @@ const GoogleButton: React.FC<GoogleButtonProps> = ({
   return (
     <button 
       onClick={onClick}
-      className={`w-full bg-navy-800 text-navy-100 p-3 rounded-xl font-semibold hover:bg-navy-700 active:scale-[0.98] transition-all flex items-center justify-center gap-3 shadow-md border border-navy-600 ${className}`}
+      className={`w-full bg-white text-gray-900 p-3 rounded-xl font-semibold hover:bg-gray-100 active:scale-[0.98] transition-all flex items-center justify-center gap-3 shadow-md border border-gray-200 ${className}`}
     >
       <img 
         src={googleLogo} 

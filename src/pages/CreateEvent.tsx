@@ -34,21 +34,21 @@ const CreateEvent: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-navy-900 py-12 px-4 sm:px-6 lg:px-8 pt-32 text-navy-200">
-      <div className="max-w-4xl mx-auto mb-10 flex items-center justify-between">
+    <div className="min-h-screen bg-slate-50 py-12 px-4 sm:px-6 lg:px-8 pt-24">
+      <div className="max-w-4xl mx-auto mb-8 flex items-center justify-between">
         <motion.div
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
         >
             <button 
                 onClick={() => navigate(-1)}
-                className="flex items-center gap-2 text-navy-500 hover:text-gold transition-colors font-black uppercase tracking-widest text-[10px]"
+                className="flex items-center gap-2 text-gray-500 hover:text-indigo-600 transition-colors font-medium"
             >
-                <ArrowLeft className="w-4 h-4" />
+                <ArrowLeft className="w-5 h-5" />
                 Back to Dashboard
             </button>
-            <h1 className="text-5xl font-black text-navy-100 mt-3 flex items-center gap-4 tracking-tight">
-                <Sparkles className="text-gold w-10 h-10" />
+            <h1 className="text-4xl font-black text-gray-900 mt-2 flex items-center gap-3">
+                <Sparkles className="text-indigo-600 w-8 h-8" />
                 Host New Event
             </h1>
         </motion.div>

@@ -35,21 +35,21 @@ const StatsCard: React.FC<StatsCardProps> = ({ label, value, icon: Icon, color, 
       animate={{ opacity: 1, y: 0 }}
       whileHover={{ y: -4, scale: 1.02 }}
       transition={{ delay }}
-      className="bg-navy-700 p-6 rounded-[24px] flex flex-col gap-4 border border-navy-600 shadow-xl shadow-black/20 hover:border-gold/30 transition-all duration-300"
+      className="bg-white p-6 rounded-[24px] flex flex-col gap-4 border border-gray-100 shadow-[0_2px_12px_rgb(0,0,0,0.03)] hover:border-indigo-200 hover:shadow-xl hover:shadow-indigo-100/50 transition-all duration-300"
     >
-      <div className={`w-12 h-12 rounded-2xl ${bg.replace('bg-indigo-50', 'bg-navy-800').replace('bg-purple-50', 'bg-navy-800').replace('bg-blue-50', 'bg-navy-800').replace('bg-emerald-50', 'bg-navy-800').replace('bg-amber-50', 'bg-navy-800')} ${color.includes('emerald') ? 'text-emerald-400' : 'text-gold'} flex items-center justify-center border border-navy-600 shadow-inner`}>
+      <div className={`w-12 h-12 rounded-2xl ${bg} ${color} flex items-center justify-center shadow-inner`}>
         <Icon className="w-6 h-6" />
       </div>
       <div>
-        <p className="text-[10px] text-navy-500 font-black uppercase tracking-widest mb-1">{label}</p>
-        <motion.p className="text-3xl font-black text-navy-100 tracking-tight">
+        <p className="text-[10px] text-gray-400 font-black uppercase tracking-widest mb-1">{label}</p>
+        <motion.p className="text-3xl font-black text-gray-900 tracking-tight">
           {typeof value === 'number' || !isNaN(numericValue) ? (
             <motion.span>{displayValue}</motion.span>
           ) : value}
         </motion.p>
         {trend && (
-          <p className={`text-[10px] font-black uppercase tracking-widest mt-2 flex items-center gap-1 ${trend.positive ? 'text-emerald-400' : 'text-rose-400'}`}>
-            <span>{trend.positive ? '▲' : '▼'}</span> {trend.value}
+          <p className={`text-xs font-bold mt-1 flex items-center gap-1 ${trend.positive ? 'text-emerald-600' : 'text-rose-500'}`}>
+            <span className="text-[10px]">{trend.positive ? '▲' : '▼'}</span> {trend.value}
           </p>
         )}
       </div>

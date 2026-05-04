@@ -17,7 +17,6 @@ import EventDetails from './pages/EventDetails';
 import Transactions from './pages/Transactions';
 import AdminTransactions from './pages/AdminTransactions';
 import ManageOrganizers from './pages/ManageOrganizers';
-import OrganizerProfile from './pages/OrganizerProfile';
 
 import AuthLayout from './layouts/AuthLayout';
 import MainLayout from './layouts/MainLayout';
@@ -58,7 +57,6 @@ const App = () => {
             <Route element={<MainLayout />}>
               <Route path="/events" element={<EventList />} />
               <Route path="/events/:id" element={<EventDetails />} />
-              <Route path="/organizer/:id" element={<OrganizerProfile />} />
               
               <Route path="/" element={<LandingRedirect />} />
 
@@ -90,17 +88,7 @@ const App = () => {
             <Route path="*" element={<Navigate to="/" />} />
           </Routes>
         </Router>
-        <Toaster 
-          position="top-right" 
-          toastOptions={{
-            classNames: {
-              success: 'toast-success',
-              error: 'toast-error',
-              warning: 'toast-warning',
-              info: 'toast-info',
-            },
-          }}
-        />
+        <Toaster position="top-right" richColors />
       </SocketProvider>
     </AuthProvider>
   );

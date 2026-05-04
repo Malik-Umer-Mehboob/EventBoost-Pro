@@ -65,72 +65,72 @@ const EventForm: React.FC<EventFormProps> = ({ initialData, onSubmit, isLoading 
     <motion.form
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="bg-navy-800/50 p-8 sm:p-10 rounded-[40px] border border-navy-600 shadow-2xl space-y-10 max-w-4xl mx-auto backdrop-blur-md"
+      className="bg-white p-8 sm:p-10 rounded-[32px] border border-gray-100 shadow-[0_8px_30px_rgb(0,0,0,0.04)] space-y-8 max-w-4xl mx-auto"
       onSubmit={handleSubmit}
     >
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
         {/* Left Column: Basic Info */}
-        <div className="space-y-6">
+        <div className="space-y-4">
           <div>
-            <label className="block text-[10px] font-black text-navy-400 uppercase tracking-widest mb-2 pl-1">Event Designation</label>
-            <div className="relative group">
-              <Sparkles className="absolute left-4 top-1/2 -translate-y-1/2 text-navy-500 group-focus-within:text-gold transition-colors w-5 h-5" />
+            <label className="block text-sm font-medium text-gray-700 mb-1">Event Title</label>
+            <div className="relative">
+              <Sparkles className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
               <input
                 type="text"
                 name="title"
                 required
                 value={formData.title}
                 onChange={handleChange}
-                className="w-full pl-12 pr-4 py-4 bg-navy-950 border border-navy-700 rounded-2xl focus:border-gold/30 transition-all outline-none text-navy-100 font-bold placeholder-navy-600 shadow-inner"
-                placeholder="e.g. Quantum Tech Summit"
+                className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 transition-all outline-none"
+                placeholder="e.g. Summer Music Festival"
               />
             </div>
           </div>
 
           <div>
-            <label className="block text-[10px] font-black text-navy-400 uppercase tracking-widest mb-2 pl-1">Project Abstract</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
             <textarea
               name="description"
               required
-              rows={5}
+              rows={4}
               value={formData.description}
               onChange={handleChange}
-              className="w-full px-5 py-4 bg-navy-950 border border-navy-700 rounded-2xl focus:border-gold/30 transition-all outline-none text-navy-100 font-medium placeholder-navy-600 shadow-inner resize-none"
-              placeholder="Detailed operational briefing for attendees..."
+              className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 transition-all outline-none"
+              placeholder="Tell people about your event..."
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-6">
+          <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-[10px] font-black text-navy-400 uppercase tracking-widest mb-2 pl-1">Sector</label>
-              <div className="relative group">
-                <Tag className="absolute left-4 top-1/2 -translate-y-1/2 text-navy-500 group-focus-within:text-gold transition-colors w-5 h-5" />
+              <label className="block text-sm font-medium text-gray-700 mb-1">Category</label>
+              <div className="relative">
+                <Tag className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
                 <select
                   name="category"
                   required
                   value={formData.category}
                   onChange={handleChange}
-                  className="w-full pl-12 pr-4 py-4 bg-navy-950 border border-navy-700 rounded-2xl focus:border-gold/30 transition-all outline-none text-navy-100 font-bold appearance-none cursor-pointer"
+                  className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 transition-all outline-none bg-white appearance-none"
                 >
-                  <option value="" className="bg-navy-900">Select</option>
+                  <option value="">Select</option>
                   {categories.map((cat) => (
-                    <option key={cat} value={cat} className="bg-navy-900">{cat}</option>
+                    <option key={cat} value={cat}>{cat}</option>
                   ))}
                 </select>
               </div>
             </div>
 
             <div>
-              <label className="block text-[10px] font-black text-navy-400 uppercase tracking-widest mb-2 pl-1">Schedule</label>
-              <div className="relative group">
-                <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 text-navy-500 group-focus-within:text-gold transition-colors w-5 h-5" />
+              <label className="block text-sm font-medium text-gray-700 mb-1">Date & Time</label>
+              <div className="relative">
+                <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
                 <input
                   type="datetime-local"
                   name="date"
                   required
                   value={formData.date ? new Date(formData.date).toISOString().slice(0, 16) : ''}
                   onChange={handleChange}
-                  className="w-full pl-12 pr-4 py-4 bg-navy-950 border border-navy-700 rounded-2xl focus:border-gold/30 transition-all outline-none text-navy-100 font-bold"
+                  className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 transition-all outline-none"
                 />
               </div>
             </div>
@@ -138,28 +138,28 @@ const EventForm: React.FC<EventFormProps> = ({ initialData, onSubmit, isLoading 
         </div>
 
         {/* Right Column: Logistics & Image */}
-        <div className="space-y-6">
+        <div className="space-y-4">
           <div>
-            <label className="block text-[10px] font-black text-navy-400 uppercase tracking-widest mb-2 pl-1">Operational Zone</label>
-            <div className="relative group">
-              <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 text-navy-500 group-focus-within:text-gold transition-colors w-5 h-5" />
+            <label className="block text-sm font-medium text-gray-700 mb-1">Location</label>
+            <div className="relative">
+              <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
               <input
                 type="text"
                 name="location"
                 required
                 value={formData.location}
                 onChange={handleChange}
-                className="w-full pl-12 pr-4 py-4 bg-navy-950 border border-navy-700 rounded-2xl focus:border-gold/30 transition-all outline-none text-navy-100 font-bold placeholder-navy-600 shadow-inner"
-                placeholder="e.g. Orbital Station, L4"
+                className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 transition-all outline-none"
+                placeholder="e.g. Grand Plaza, NYC"
               />
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-6">
+          <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-[10px] font-black text-navy-400 uppercase tracking-widest mb-2 pl-1">Unit Valuation ($)</label>
-              <div className="relative group">
-                <DollarSign className="absolute left-4 top-1/2 -translate-y-1/2 text-navy-500 group-focus-within:text-gold transition-colors w-5 h-5" />
+              <label className="block text-sm font-medium text-gray-700 mb-1">Ticket Price ($)</label>
+              <div className="relative">
+                <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
                 <input
                   type="number"
                   name="ticketPrice"
@@ -167,15 +167,15 @@ const EventForm: React.FC<EventFormProps> = ({ initialData, onSubmit, isLoading 
                   min="0"
                   value={formData.ticketPrice}
                   onChange={handleChange}
-                  className="w-full pl-12 pr-4 py-4 bg-navy-950 border border-navy-700 rounded-2xl focus:border-gold/30 transition-all outline-none text-navy-100 font-bold shadow-inner"
+                  className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 transition-all outline-none"
                 />
               </div>
             </div>
 
             <div>
-              <label className="block text-[10px] font-black text-navy-400 uppercase tracking-widest mb-2 pl-1">Capacity</label>
-              <div className="relative group">
-                <Users className="absolute left-4 top-1/2 -translate-y-1/2 text-navy-500 group-focus-within:text-gold transition-colors w-5 h-5" />
+              <label className="block text-sm font-medium text-gray-700 mb-1">Total Quantity</label>
+              <div className="relative">
+                <Users className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
                 <input
                   type="number"
                   name="ticketQuantity"
@@ -183,43 +183,41 @@ const EventForm: React.FC<EventFormProps> = ({ initialData, onSubmit, isLoading 
                   min="1"
                   value={formData.ticketQuantity}
                   onChange={handleChange}
-                  className="w-full pl-12 pr-4 py-4 bg-navy-950 border border-navy-700 rounded-2xl focus:border-gold/30 transition-all outline-none text-navy-100 font-bold shadow-inner"
+                  className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 transition-all outline-none"
                 />
               </div>
             </div>
           </div>
 
-          <div className="pt-2">
-            <ImageUploader 
-              label="Visual Identity (Banner)"
-              currentImage={initialData?.bannerImage?.url}
-              onImageSelect={setSelectedFile}
-            />
-          </div>
+          <ImageUploader 
+            label="Event Banner"
+            currentImage={initialData?.bannerImage?.url}
+            onImageSelect={setSelectedFile}
+          />
 
-          <div className="flex items-center gap-4 py-4 px-6 bg-navy-950/50 rounded-2xl border border-navy-700">
+          <div className="flex items-center gap-3 py-2">
             <input
               type="checkbox"
               name="isFeatured"
               id="isFeatured"
               checked={formData.isFeatured}
               onChange={(e) => setFormData(prev => ({ ...prev, isFeatured: e.target.checked }))}
-              className="w-6 h-6 rounded border-navy-700 text-gold focus:ring-gold bg-navy-900 cursor-pointer transition-all"
+              className="w-5 h-5 rounded text-indigo-600 focus:ring-indigo-500 cursor-pointer"
             />
-            <label htmlFor="isFeatured" className="text-[10px] font-black text-navy-300 uppercase tracking-widest cursor-pointer select-none">
-              Prioritize in Global Feed (Featured)
+            <label htmlFor="isFeatured" className="text-sm font-medium text-gray-700 cursor-pointer">
+              Mark as Featured Event
             </label>
           </div>
         </div>
       </div>
 
-      <div className="pt-8 border-t border-navy-700">
+      <div className="pt-6 border-t border-gray-100">
         <button
           type="submit"
           disabled={isLoading}
-          className="w-full py-5 px-8 rounded-2xl bg-gold text-navy-900 font-black text-sm uppercase tracking-widest shadow-xl shadow-gold/10 hover:bg-[#b8963e] disabled:opacity-30 disabled:grayscale disabled:cursor-not-allowed transition-all transform hover:scale-[1.01] active:scale-[0.98]"
+          className="w-full py-4 px-6 rounded-xl text-white font-bold gradient-primary gradient-hover shadow-lg shadow-indigo-200 disabled:opacity-50 disabled:cursor-not-allowed transition-all transform hover:scale-[1.01] active:scale-[0.99]"
         >
-          {isLoading ? 'Synchronizing Archive...' : initialData ? 'Authorize Updates' : 'Initialize Event Protocol'}
+          {isLoading ? 'Saving...' : initialData ? 'Update Event' : 'Create Event'}
         </button>
       </div>
     </motion.form>

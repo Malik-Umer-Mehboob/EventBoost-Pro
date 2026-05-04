@@ -98,55 +98,55 @@ const ManageOrganizers = () => {
   );
 
   return (
-    <div className="min-h-screen bg-navy-900 pt-24 pb-16 px-4 sm:px-6 lg:px-8 text-navy-200">
+    <div className="min-h-screen bg-slate-50 pt-24 pb-16 px-4 sm:px-6 lg:px-8">
       <div className="max-w-7xl mx-auto">
         
         {/* Header Section */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between mb-12 gap-6">
+        <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
           <div>
-            <div className="flex items-center gap-3 text-gold mb-2">
-              <ShieldCheck className="w-6 h-6" />
-              <span className="text-[10px] font-black uppercase tracking-[0.3em]">Administrative Nexus</span>
+            <div className="flex items-center gap-2 text-indigo-600 mb-1">
+              <ShieldCheck className="w-5 h-5" />
+              <span className="text-xs font-black uppercase tracking-widest">Admin Control</span>
             </div>
-            <h1 className="text-5xl font-black text-navy-100 tracking-tight">Manage Organizers</h1>
-            <p className="text-navy-400 mt-2 font-medium">Verified platform entities: <span className="font-black text-gold">{totalCount}</span></p>
+            <h1 className="text-4xl font-black text-gray-900">Manage Organizers</h1>
+            <p className="text-gray-500 mt-1">Total Organizers: <span className="font-bold text-indigo-600">{totalCount}</span></p>
           </div>
 
-          <div className="relative max-w-sm w-full group">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-navy-500 group-focus-within:text-gold transition-colors" />
+          <div className="relative max-w-sm w-full">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
             <input
               type="text"
               placeholder="Search by name or email..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-12 pr-4 py-4 bg-navy-950 border border-navy-700 rounded-2xl outline-none focus:border-gold/30 transition-all shadow-inner font-bold text-navy-100 placeholder-navy-500"
+              className="w-full pl-12 pr-4 py-3 bg-white border border-gray-100 rounded-2xl outline-none focus:ring-2 focus:ring-indigo-100 transition-all shadow-sm"
             />
           </div>
         </div>
 
         {/* Organizers Table */}
-        <div className="bg-navy-800/50 rounded-[40px] overflow-hidden shadow-2xl border border-navy-600">
+        <div className="bg-white rounded-[32px] overflow-hidden shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-gray-100">
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse">
               <thead>
-                <tr className="bg-navy-950 text-[10px] font-black text-navy-400 uppercase tracking-widest leading-none">
-                  <th className="px-8 py-6 border-b border-navy-700">Organizer Entity</th>
-                  <th className="px-8 py-6 border-b border-navy-700">Verification</th>
-                  <th className="px-8 py-6 border-b border-navy-700">Event Load</th>
-                  <th className="px-8 py-6 border-b border-navy-700">Registry Date</th>
-                  <th className="px-8 py-6 border-b border-navy-700 text-right">Operations</th>
+                <tr className="bg-slate-50/50 border-b border-gray-100">
+                  <th className="px-6 py-5 text-xs font-black text-gray-400 uppercase tracking-wider">Organizer</th>
+                  <th className="px-6 py-5 text-xs font-black text-gray-400 uppercase tracking-wider">Status</th>
+                  <th className="px-6 py-5 text-xs font-black text-gray-400 uppercase tracking-wider">Events</th>
+                  <th className="px-6 py-5 text-xs font-black text-gray-400 uppercase tracking-wider">Joined Date</th>
+                  <th className="px-6 py-5 text-xs font-black text-gray-400 uppercase tracking-wider text-right">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-navy-700/50">
+              <tbody className="divide-y divide-gray-50">
                 {loading ? (
                    Array(5).fill(0).map((_, i) => (
                     <tr key={i}>
-                      <td colSpan={5} className="px-8 py-10">
-                        <div className="flex items-center gap-4 animate-pulse">
-                          <div className="w-12 h-12 bg-navy-700 rounded-xl"></div>
-                          <div className="space-y-3">
-                            <div className="h-4 w-32 bg-navy-700 rounded"></div>
-                            <div className="h-3 w-48 bg-navy-800 rounded"></div>
+                      <td colSpan={5} className="px-6 py-8">
+                        <div className="flex items-center gap-3 animate-pulse">
+                          <div className="w-10 h-10 bg-gray-200 rounded-xl"></div>
+                          <div className="space-y-2">
+                            <div className="h-4 w-32 bg-gray-200 rounded"></div>
+                            <div className="h-3 w-48 bg-gray-100 rounded"></div>
                           </div>
                         </div>
                       </td>
@@ -154,12 +154,12 @@ const ManageOrganizers = () => {
                   ))
                 ) : filteredOrganizers.length === 0 ? (
                   <tr>
-                    <td colSpan={5} className="px-8 py-24 text-center">
-                      <div className="flex flex-col items-center gap-4">
-                        <div className="w-20 h-20 bg-navy-900 rounded-[2rem] flex items-center justify-center border-2 border-dashed border-navy-700">
-                          <User className="w-8 h-8 text-navy-600" />
+                    <td colSpan={5} className="px-6 py-20 text-center">
+                      <div className="flex flex-col items-center gap-3">
+                        <div className="w-16 h-16 bg-slate-100 rounded-3xl flex items-center justify-center">
+                          <User className="w-8 h-8 text-slate-300" />
                         </div>
-                        <p className="font-black text-navy-500 uppercase tracking-widest text-[10px]">Registry is empty</p>
+                        <p className="font-bold text-gray-400">No organizers found</p>
                       </div>
                     </td>
                   </tr>
@@ -169,58 +169,56 @@ const ManageOrganizers = () => {
                       key={org._id}
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
-                      className="hover:bg-white/[0.02] transition-colors group"
+                      className="hover:bg-indigo-50/30 transition-colors group"
                     >
-                      <td className="px-8 py-6">
+                      <td className="px-6 py-5">
                         <div className="flex items-center gap-4">
-                          <div className="w-12 h-12 rounded-2xl bg-navy-900 border border-navy-700 flex items-center justify-center text-gold font-black shadow-xl">
+                          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white font-black shadow-lg shadow-indigo-100">
                             {org.name.charAt(0).toUpperCase()}
                           </div>
                           <div>
-                            <p className="font-bold text-navy-100 group-hover:text-gold transition-colors tracking-tight">{org.name}</p>
-                            <p className="text-[10px] text-navy-500 font-bold flex items-center gap-1.5 mt-1">
-                              <Mail className="w-3.5 h-3.5" />
+                            <p className="font-bold text-gray-900 group-hover:text-indigo-600 transition-colors">{org.name}</p>
+                            <p className="text-xs text-gray-500 flex items-center gap-1">
+                              <Mail className="w-3 h-3" />
                               {org.email}
                             </p>
                           </div>
                         </div>
                       </td>
-                      <td className="px-8 py-6">
-                        <span className={`px-[10px] py-[3px] rounded-[5px] text-[12px] font-black uppercase tracking-widest border ${
+                      <td className="px-6 py-5">
+                        <span className={`px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider ${
                           org.status === 'active' 
-                            ? 'bg-emerald-950/30 text-emerald-400 border-emerald-900/50' 
-                            : 'bg-rose-950/30 text-rose-400 border-rose-900/50'
+                            ? 'bg-emerald-50 text-emerald-600' 
+                            : 'bg-rose-50 text-rose-600'
                         }`}>
                           {org.status}
                         </span>
                       </td>
-                      <td className="px-8 py-6">
-                        <div className="flex items-center gap-3">
-                          <div className="p-2 bg-navy-950 rounded-lg">
-                            <Calendar className="w-4 h-4 text-gold" />
-                          </div>
-                          <span className="font-black text-navy-100">{org.eventCount}</span>
+                      <td className="px-6 py-5">
+                        <div className="flex items-center gap-2">
+                          <Calendar className="w-4 h-4 text-indigo-400" />
+                          <span className="font-bold text-gray-700">{org.eventCount}</span>
                         </div>
                       </td>
-                      <td className="px-8 py-6 text-[10px] font-black text-navy-500 uppercase tracking-widest">
+                      <td className="px-6 py-5 text-sm text-gray-500">
                         {format(new Date(org.createdAt), 'MMM dd, yyyy')}
                       </td>
-                      <td className="px-8 py-6 text-right">
-                        <div className="flex items-center justify-end gap-3">
-                           <button 
-                             onClick={() => handleEdit(org)}
-                             className="p-3 text-navy-400 hover:text-gold hover:bg-navy-900 rounded-xl transition-all border border-transparent hover:border-navy-700 shadow-sm"
-                             title="Modify Entity"
-                           >
-                             <Edit3 className="w-5 h-5" />
-                           </button>
-                           <button 
-                             onClick={() => setDeletingOrg(org)}
-                             className="p-3 text-navy-400 hover:text-rose-400 hover:bg-rose-950/30 rounded-xl transition-all border border-transparent hover:border-rose-900/50 shadow-sm"
-                             title="Purge Record"
-                           >
-                             <Trash2 className="w-5 h-5" />
-                           </button>
+                      <td className="px-6 py-5 text-right">
+                        <div className="flex items-center justify-end gap-2">
+                          <button 
+                            onClick={() => handleEdit(org)}
+                            className="p-2 text-slate-400 hover:text-indigo-600 hover:bg-white rounded-xl transition-all"
+                            title="Edit Organizer"
+                          >
+                            <Edit3 className="w-5 h-5" />
+                          </button>
+                          <button 
+                            onClick={() => setDeletingOrg(org)}
+                            className="p-2 text-slate-400 hover:text-rose-600 hover:bg-white rounded-xl transition-all"
+                            title="Delete Organizer"
+                          >
+                            <Trash2 className="w-5 h-5" />
+                          </button>
                         </div>
                       </td>
                     </motion.tr>
@@ -240,51 +238,51 @@ const ManageOrganizers = () => {
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
                 onClick={() => setEditingOrg(null)}
-                className="absolute inset-0 bg-navy-950/80 backdrop-blur-md"
+                className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm"
               />
               <motion.div 
                 initial={{ scale: 0.9, opacity: 0, y: 20 }}
                 animate={{ scale: 1, opacity: 1, y: 0 }}
                 exit={{ scale: 0.9, opacity: 0, y: 20 }}
-                className="bg-navy-800 rounded-[3rem] w-full max-w-md p-10 shadow-2xl relative z-10 border border-navy-600"
+                className="bg-white rounded-[2rem] w-full max-w-md p-8 shadow-2xl relative z-10"
               >
-                <div className="flex items-center justify-between mb-10">
-                  <div className="flex items-center gap-4">
-                    <div className="p-4 bg-navy-950 rounded-2xl border border-navy-700 text-gold shadow-xl">
-                      <Edit3 className="w-7 h-7" />
+                <div className="flex items-center justify-between mb-6">
+                  <div className="flex items-center gap-3">
+                    <div className="p-3 bg-indigo-50 rounded-2xl">
+                      <Edit3 className="w-6 h-6 text-indigo-600" />
                     </div>
                     <div>
-                      <h3 className="text-2xl font-black text-navy-100 tracking-tight">Edit Entity</h3>
-                      <p className="text-[10px] font-black text-navy-500 uppercase tracking-widest mt-1">{editingOrg.email}</p>
+                      <h3 className="text-xl font-black text-gray-900">Edit Organizer</h3>
+                      <p className="text-sm text-gray-500">{editingOrg.email}</p>
                     </div>
                   </div>
-                  <button onClick={() => setEditingOrg(null)} className="p-2 hover:bg-navy-700 rounded-xl transition-colors">
-                    <X className="w-7 h-7 text-navy-400" />
+                  <button onClick={() => setEditingOrg(null)} className="p-2 hover:bg-slate-50 rounded-xl transition-colors">
+                    <X className="w-6 h-6 text-gray-400" />
                   </button>
                 </div>
 
-                <form onSubmit={handleUpdate} className="space-y-8">
+                <form onSubmit={handleUpdate} className="space-y-6">
                   <div className="space-y-2">
-                    <label className="text-[10px] font-black text-navy-500 uppercase tracking-widest pl-1">Legal Designation</label>
+                    <label className="text-xs font-black text-gray-400 uppercase tracking-widest ml-1">Full Name</label>
                     <input
                       type="text"
                       value={editName}
                       onChange={(e) => setEditName(e.target.value)}
-                      className="w-full px-6 py-5 rounded-[20px] bg-navy-950 border border-navy-700 focus:border-gold/30 outline-none transition-all font-black text-navy-100"
+                      className="w-full px-5 py-4 rounded-2xl bg-slate-50 border border-gray-100 focus:border-indigo-300 outline-none transition-all font-bold"
                       required
                     />
                   </div>
 
                   <div className="space-y-2">
-                    <label className="text-[10px] font-black text-navy-500 uppercase tracking-widest pl-1">Authorization Status</label>
-                    <div className="grid grid-cols-2 gap-4">
+                    <label className="text-xs font-black text-gray-400 uppercase tracking-widest ml-1">Status</label>
+                    <div className="grid grid-cols-2 gap-3">
                       <button
                         type="button"
                         onClick={() => setEditStatus('active')}
-                        className={`py-5 rounded-[20px] font-black tracking-widest transition-all border-2 ${
+                        className={`py-4 rounded-2xl font-black transition-all border-2 ${
                           editStatus === 'active' 
-                          ? 'bg-emerald-950/20 border-emerald-500 text-emerald-400 shadow-lg shadow-emerald-500/10' 
-                          : 'bg-navy-950 border-navy-700 text-navy-500 hover:bg-navy-900'
+                          ? 'bg-emerald-50 border-emerald-500 text-emerald-600' 
+                          : 'bg-slate-50 border-transparent text-gray-400 hover:bg-slate-100'
                         }`}
                       >
                         ACTIVE
@@ -292,10 +290,10 @@ const ManageOrganizers = () => {
                       <button
                         type="button"
                         onClick={() => setEditStatus('blocked')}
-                        className={`py-5 rounded-[20px] font-black tracking-widest transition-all border-2 ${
+                        className={`py-4 rounded-2xl font-black transition-all border-2 ${
                           editStatus === 'blocked' 
-                          ? 'bg-rose-950/20 border-rose-500 text-rose-400 shadow-lg shadow-rose-500/10' 
-                          : 'bg-navy-950 border-navy-700 text-navy-500 hover:bg-navy-900'
+                          ? 'bg-rose-50 border-rose-500 text-rose-600' 
+                          : 'bg-slate-50 border-transparent text-gray-400 hover:bg-slate-100'
                         }`}
                       >
                         BLOCKED
@@ -303,19 +301,19 @@ const ManageOrganizers = () => {
                     </div>
                   </div>
 
-                  <div className="p-5 bg-navy-950 rounded-2xl flex gap-4 border border-navy-700">
-                    <Info className="w-6 h-6 text-gold shrink-0" />
-                    <p className="text-xs text-navy-400 leading-relaxed font-medium">
-                      Updating authorization status will immediately synchronize across the cryptographic layer. Email identifier remains immutable.
+                  <div className="p-4 bg-amber-50 rounded-2xl flex gap-3 border border-amber-100">
+                    <Info className="w-5 h-5 text-amber-500 shrink-0" />
+                    <p className="text-xs text-amber-700 leading-relaxed font-medium">
+                      Updating the status will immediately affect the organizer's ability to login and manage events. Email cannot be changed.
                     </p>
                   </div>
 
                   <button
                     type="submit"
                     disabled={isUpdating}
-                    className="w-full py-5 bg-gold text-navy-900 rounded-[20px] font-black hover:bg-[#b8963e] transition-all shadow-xl shadow-gold/20 disabled:opacity-50 active:scale-95 uppercase tracking-widest text-sm"
+                    className="w-full py-5 bg-indigo-600 text-white rounded-2xl font-black hover:bg-indigo-700 transition-all shadow-xl shadow-indigo-100 disabled:opacity-50"
                   >
-                    {isUpdating ? 'Synchronizing...' : 'Commit Changes'}
+                    {isUpdating ? 'Updating...' : 'Save Changes'}
                   </button>
                 </form>
               </motion.div>
@@ -332,42 +330,42 @@ const ManageOrganizers = () => {
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
                 onClick={() => setDeletingOrg(null)}
-                className="absolute inset-0 bg-navy-950/80 backdrop-blur-md"
+                className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm"
               />
               <motion.div 
                 initial={{ scale: 0.9, opacity: 0, y: 20 }}
                 animate={{ scale: 1, opacity: 1, y: 0 }}
                 exit={{ scale: 0.9, opacity: 0, y: 20 }}
-                className="bg-navy-800 rounded-[3rem] w-full max-w-md p-10 shadow-2xl relative z-10 border border-navy-600"
+                className="bg-white rounded-[2rem] w-full max-w-md p-8 shadow-2xl relative z-10"
               >
                 <div className="flex flex-col items-center text-center">
-                  <div className="w-24 h-24 bg-rose-950/30 rounded-[2.5rem] flex items-center justify-center mb-8 border border-rose-900/50">
-                    <AlertTriangle className="w-12 h-12 text-rose-500" />
+                  <div className="w-20 h-20 bg-rose-50 rounded-[2rem] flex items-center justify-center mb-6">
+                    <AlertTriangle className="w-10 h-10 text-rose-500" />
                   </div>
                   
-                  <h3 className="text-3xl font-black text-navy-100 mb-3 tracking-tight">Purge Entity?</h3>
-                  <p className="text-navy-400 mb-10 px-4 font-medium leading-relaxed">
-                    Initiating permanent deletion of <span className="text-navy-100 font-black">"{deletingOrg.name}"</span>. 
-                    This will terminate <span className="text-rose-400 font-black tracking-widest uppercase text-xs">{deletingOrg.eventCount} active events</span>.
+                  <h3 className="text-2xl font-black text-gray-900 mb-2">Delete Organizer?</h3>
+                  <p className="text-gray-500 mb-8 px-4">
+                    Are you sure you want to delete <span className="font-bold text-gray-900">"{deletingOrg.name}"</span>? 
+                    This will permanently remove their account and all <span className="font-bold text-rose-500">{deletingOrg.eventCount} events</span>.
                   </p>
 
-                  <div className="grid grid-cols-2 gap-5 w-full">
+                  <div className="grid grid-cols-2 gap-4 w-full">
                     <button
                       onClick={() => setDeletingOrg(null)}
-                      className="py-5 bg-navy-900 text-navy-400 rounded-[20px] font-black hover:bg-navy-700 transition-all uppercase tracking-widest text-xs"
+                      className="py-4 bg-slate-100 text-gray-600 rounded-2xl font-black hover:bg-slate-200 transition-all"
                     >
-                      Abeyance
+                      Cancel
                     </button>
                     <button
                       onClick={handleDelete}
                       disabled={isDeleting}
-                      className="py-5 bg-rose-500 text-white rounded-[20px] font-black hover:bg-rose-600 transition-all shadow-xl shadow-rose-500/20 disabled:opacity-50 uppercase tracking-widest text-xs"
+                      className="py-4 bg-rose-500 text-white rounded-2xl font-black hover:bg-rose-600 transition-all shadow-xl shadow-rose-100 disabled:opacity-50"
                     >
-                      {isDeleting ? 'Purging...' : 'Execute'}
+                      {isDeleting ? 'Deleting...' : 'Confirm'}
                     </button>
                   </div>
                   
-                  <p className="text-[10px] text-rose-400/50 mt-8 uppercase tracking-[0.3em] font-black">Final Irreversible Protocol</p>
+                  <p className="text-[10px] text-gray-400 mt-6 uppercase tracking-widest font-bold">This action cannot be undone</p>
                 </div>
               </motion.div>
             </div>

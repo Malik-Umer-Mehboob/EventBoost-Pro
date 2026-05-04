@@ -68,53 +68,51 @@ const NotificationDropdown = () => {
             initial={{ opacity: 0, y: 10, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 10, scale: 0.95 }}
-            className="absolute right-0 mt-3 w-80 sm:w-96 bg-navy-700 rounded-[32px] shadow-2xl border border-navy-600 overflow-hidden z-[60]"
+            className="absolute right-0 mt-3 w-80 sm:w-96 bg-white rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.12)] border border-gray-100 overflow-hidden z-[60]"
           >
-            <div className="p-5 border-b border-navy-600 flex items-center justify-between bg-navy-800/50">
-              <h3 className="font-black text-navy-100">Notifications</h3>
+            <div className="p-4 border-b border-gray-100 flex items-center justify-between bg-gray-50/50">
+              <h3 className="font-black text-gray-900">Notifications</h3>
               {unreadCount > 0 && (
                 <button
                   onClick={markAllAsRead}
-                  className="text-[10px] font-black text-gold hover:text-gold/80 uppercase tracking-widest transition-colors"
+                  className="text-xs font-bold text-indigo-600 hover:text-indigo-800 transition-colors"
                 >
                   Mark all as read
                 </button>
               )}
             </div>
 
-            <div className="max-h-[400px] overflow-y-auto custom-scrollbar bg-navy-700">
+            <div className="max-h-[400px] overflow-y-auto custom-scrollbar">
               {notifications.length > 0 ? (
                 notifications.map((n) => (
                   <div
                     key={n._id}
-                    className={`p-5 border-b border-navy-600/50 hover:bg-navy-800 transition-all cursor-pointer relative ${
-                      !n.isRead ? 'bg-navy-800/40' : 'opacity-60'
+                    className={`p-4 border-b border-gray-50 hover:bg-gray-50 transition-all cursor-pointer relative ${
+                      !n.isRead ? 'bg-indigo-50/30' : ''
                     }`}
                     onClick={() => markAsRead(n._id)}
                   >
                     {!n.isRead && (
-                      <div className="absolute left-0 top-1/2 -translate-y-1/2 w-[2px] h-10 bg-gold rounded-full" />
+                      <div className="absolute left-1 top-1/2 -translate-y-1/2 w-1 h-8 bg-indigo-500 rounded-full" />
                     )}
-                    <div className="flex gap-4">
-                      <div className="mt-1 p-2 bg-navy-900 rounded-xl border border-navy-600">
-                        {getIcon(n.type)}
-                      </div>
+                    <div className="flex gap-3">
+                      <div className="mt-1">{getIcon(n.type)}</div>
                       <div className="flex-1">
-                        <div className="flex justify-between items-start mb-1">
-                          <p className={`text-sm font-black tracking-tight ${!n.isRead ? 'text-navy-100' : 'text-navy-200'}`}>
+                        <div className="flex justify-between items-start">
+                          <p className={`text-sm font-bold ${!n.isRead ? 'text-gray-900' : 'text-gray-600'}`}>
                             {n.title}
                           </p>
-                          <span className="text-[10px] font-black text-navy-500 whitespace-nowrap ml-2 uppercase tracking-widest">
+                          <span className="text-[10px] font-medium text-gray-400 whitespace-nowrap ml-2">
                              {formatDistanceToNow(new Date(n.createdAt), { addSuffix: true })}
                           </span>
                         </div>
-                        <p className="text-xs text-navy-200 leading-relaxed font-medium">
+                        <p className="text-xs text-gray-500 mt-1 leading-relaxed">
                           {n.message}
                         </p>
                         {n.link && (
                           <Link
                             to={n.link}
-                            className="inline-flex items-center gap-1 text-[10px] font-black text-gold mt-3 hover:underline uppercase tracking-widest"
+                            className="inline-flex items-center gap-1 text-[10px] font-bold text-indigo-600 mt-2 hover:underline"
                             onClick={(e) => e.stopPropagation()}
                           >
                             View Details <ExternalLink className="w-3 h-3" />
@@ -125,16 +123,16 @@ const NotificationDropdown = () => {
                   </div>
                 ))
               ) : (
-                <div className="p-12 text-center">
-                  <Bell className="w-16 h-16 text-navy-800 mx-auto mb-4 opacity-20" />
-                  <p className="text-[10px] font-black text-navy-500 uppercase tracking-widest">All caught up</p>
+                <div className="p-8 text-center">
+                  <Bell className="w-12 h-12 text-gray-200 mx-auto mb-3" />
+                  <p className="text-sm font-medium text-gray-400">No notifications yet</p>
                 </div>
               )}
             </div>
 
-            <div className="p-4 bg-navy-800/80 text-center border-t border-navy-600">
-              <p className="text-[9px] font-black text-navy-500 uppercase tracking-[0.2em]">
-                Secure Real-time Stream
+            <div className="p-3 bg-gray-50 text-center border-t border-gray-100">
+              <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">
+                Real-time updates active
               </p>
             </div>
           </motion.div>

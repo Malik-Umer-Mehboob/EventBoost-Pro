@@ -63,31 +63,13 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     // Global Alert Listener
     newSocket.on('emergency_alert', (payload: { title: string; content: string; eventId?: string }) => {
       console.log('🚨 Received Emergency Alert:', payload);
-      toast.custom((t) => (
-        <div className="alert-banner-realtime shadow-2xl min-w-[320px] md:min-w-[400px] flex-col !items-start gap-2 relative overflow-hidden group">
-          <div className="absolute top-0 left-0 w-1 h-full bg-[#E24B4A]"></div>
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-[#E24B4A]/20 rounded-lg">
-              <span className="animate-pulse">🚨</span>
-            </div>
-            <h4 className="font-black text-sm tracking-tight">{payload.title}</h4>
-          </div>
-          <p className="text-[11px] font-bold opacity-80 leading-relaxed pl-11">{payload.content}</p>
-          {payload.eventId && (
-            <button 
-              onClick={() => {
-                window.location.href = `/events/${payload.eventId}`;
-                toast.dismiss(t);
-              }}
-              className="mt-2 ml-11 px-4 py-1.5 bg-[#E24B4A] text-white rounded-lg text-[10px] font-black uppercase tracking-widest hover:bg-rose-600 transition-all active:scale-95 shadow-lg shadow-rose-500/20"
-            >
-              Intercept Event
-            </button>
-          )}
-        </div>
-      ), {
-        duration: 15000,
-        position: 'top-center'
+      toast.error(payload.title, {
+        description: payload.content,
+        duration: 10000,
+        action: payload.eventId ? {
+          label: 'View Event',
+          onClick: () => window.location.href = `/events/${payload.eventId}`
+        } : undefined
       });
     });
 

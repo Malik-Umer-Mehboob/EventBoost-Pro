@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Eye, EyeOff, ShieldCheck, Users, Calendar, TrendingUp, DollarSign, Ticket, RefreshCw, Activity, Megaphone, Send, Plus } from 'lucide-react';
+import { Eye, EyeOff, ShieldCheck, Users, Calendar, TrendingUp, DollarSign, Ticket, RefreshCw, Activity, Megaphone, Send } from 'lucide-react';
 import { motion } from 'framer-motion';
 import api from '../api/axios';
 import { toast } from 'sonner';
@@ -108,41 +108,41 @@ const AdminDashboard = () => {
   };
 
   const kpiCards = [
-    { label: 'Total Users', value: stats?.users ?? '–', icon: Users, color: 'text-gold', bg: 'bg-navy-800', delay: 0 },
-    { label: 'Organizers', value: stats?.organizers ?? '–', icon: ShieldCheck, color: 'text-gold', bg: 'bg-navy-800', delay: 0.05 },
-    { label: 'Events', value: stats?.events ?? '–', icon: Calendar, color: 'text-gold', bg: 'bg-navy-800', delay: 0.1 },
-    { label: 'Total Revenue', value: stats ? `$${stats.revenue.toLocaleString()}` : '–', icon: DollarSign, color: 'text-gold', bg: 'bg-navy-800', delay: 0.15 },
-    { label: 'Tickets Sold', value: stats?.ticketsSold ?? '–', icon: Ticket, color: 'text-emerald-400', bg: 'bg-navy-800', delay: 0.2 },
+    { label: 'Total Users', value: stats?.users ?? '–', icon: Users, color: 'text-indigo-600', bg: 'bg-indigo-50', delay: 0 },
+    { label: 'Organizers', value: stats?.organizers ?? '–', icon: ShieldCheck, color: 'text-purple-600', bg: 'bg-purple-50', delay: 0.05 },
+    { label: 'Events', value: stats?.events ?? '–', icon: Calendar, color: 'text-blue-600', bg: 'bg-blue-50', delay: 0.1 },
+    { label: 'Total Revenue', value: stats ? `$${stats.revenue.toLocaleString()}` : '–', icon: DollarSign, color: 'text-emerald-600', bg: 'bg-emerald-50', delay: 0.15 },
+    { label: 'Tickets Sold', value: stats?.ticketsSold ?? '–', icon: Ticket, color: 'text-amber-600', bg: 'bg-amber-50', delay: 0.2 },
   ];
 
   return (
-    <div className="min-h-screen bg-navy-900 pt-24 pb-16 px-4 sm:px-6 lg:px-8 text-navy-200">
+    <div className="min-h-screen bg-slate-50 pt-24 pb-16 px-4 sm:px-6 lg:px-8">
       <div className="max-w-7xl mx-auto">
 
         {/* Header */}
-        <div className="flex flex-col md:flex-row items-center justify-between mb-10 gap-6">
+        <div className="flex items-center justify-between mb-10">
           <div>
-            <p className="text-xs font-black text-gold uppercase tracking-widest mb-1">Platform Control</p>
-            <h1 className="text-4xl font-black text-navy-100">Admin Dashboard</h1>
+            <p className="text-xs font-black text-indigo-600 uppercase tracking-widest mb-1">Platform Control</p>
+            <h1 className="text-4xl font-black text-gray-900">Admin Dashboard</h1>
           </div>
-          <div className="flex flex-wrap gap-3">
+          <div className="flex gap-3">
             <button
               onClick={() => fetchDashboard(false)}
-              className="p-3 bg-navy-800 border border-navy-600 rounded-2xl text-navy-400 hover:text-gold hover:border-gold/20 transition-all shadow-sm"
+              className="p-3 bg-white border border-gray-100 rounded-2xl text-gray-400 hover:text-indigo-600 hover:border-indigo-100 transition-all shadow-sm"
               title="Refresh Analytics"
             >
               <RefreshCw className={`w-5 h-5 ${loadingStats ? 'animate-spin' : ''}`} />
             </button>
             <button
               onClick={() => navigate('/admin/manage-organizers')}
-              className="flex items-center gap-2 px-5 py-3 bg-navy-800 border border-navy-600 text-navy-200 rounded-2xl font-bold hover:border-gold/20 hover:text-gold transition-all shadow-sm"
+              className="flex items-center gap-2 px-5 py-3 bg-white border border-gray-100 text-gray-700 rounded-2xl font-bold hover:border-indigo-100 hover:text-indigo-600 transition-all shadow-sm"
             >
               <Users className="w-4 h-4" />
               Manage Organizers
             </button>
             <button
               onClick={() => navigate('/admin/transactions')}
-              className="flex items-center gap-2 px-5 py-3 bg-gold text-navy-900 rounded-2xl font-bold hover:bg-[#b8963e] transition-all shadow-lg shadow-gold/10"
+              className="flex items-center gap-2 px-5 py-3 bg-indigo-600 text-white rounded-2xl font-bold hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-100"
             >
               <ShieldCheck className="w-4 h-4" />
               Transactions
@@ -151,15 +151,15 @@ const AdminDashboard = () => {
         </div>
 
         {/* Emergency Broadcast Section */}
-        <div className="bg-navy-700 p-8 sm:p-10 rounded-[32px] mb-10 border border-navy-600 shadow-xl shadow-black/20 relative overflow-hidden">
-          <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-rose-600 rounded-l-[32px]" />
+        <div className="bg-white p-8 sm:p-10 rounded-[32px] mb-10 border border-gray-100 shadow-[0_8px_30px_rgb(0,0,0,0.04)] relative overflow-hidden">
+          <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-rose-500 rounded-l-[32px]" />
           <div className="flex items-start gap-4 mb-6">
-            <div className="p-4 bg-rose-950/30 rounded-2xl">
+            <div className="p-4 bg-rose-50 rounded-2xl">
               <Megaphone className="w-8 h-8 text-rose-500" />
             </div>
             <div>
-              <h2 className="text-xl font-black text-navy-100">Emergency Broadcast</h2>
-              <p className="text-navy-400 text-sm">Send a platform-wide alert to all connected users instantly.</p>
+              <h2 className="text-xl font-black text-gray-900">Emergency Broadcast</h2>
+              <p className="text-gray-500 text-sm">Send a platform-wide alert to all connected users instantly.</p>
             </div>
           </div>
           
@@ -170,7 +170,7 @@ const AdminDashboard = () => {
                 placeholder="Alert Title"
                 value={broadcastTitle}
                 onChange={(e) => setBroadcastTitle(e.target.value)}
-                className="w-full px-5 py-4 rounded-2xl bg-navy-900 border border-navy-600 focus:border-rose-500 outline-none transition-all shadow-sm text-navy-100 placeholder-navy-500"
+                className="w-full px-5 py-4 rounded-2xl border border-gray-100 focus:border-rose-300 outline-none transition-all shadow-sm"
                 required
               />
             </div>
@@ -178,7 +178,7 @@ const AdminDashboard = () => {
               <select
                 value={selectedEventId}
                 onChange={(e) => setSelectedEventId(e.target.value)}
-                className="w-full px-5 py-4 rounded-2xl bg-navy-900 border border-navy-600 focus:border-rose-500 outline-none transition-all shadow-sm text-navy-100"
+                className="w-full px-5 py-4 rounded-2xl border border-gray-100 focus:border-rose-300 outline-none transition-all shadow-sm bg-white"
               >
                 <option value="">All Users (Platform-wide)</option>
                 <optgroup label="Target Specific Event">
@@ -196,7 +196,7 @@ const AdminDashboard = () => {
                 placeholder="Message Content..."
                 value={broadcastMessage}
                 onChange={(e) => setBroadcastMessage(e.target.value)}
-                className="w-full px-5 py-4 rounded-2xl bg-navy-900 border border-navy-600 focus:border-rose-500 outline-none transition-all shadow-sm text-navy-100 placeholder-navy-500"
+                className="w-full px-5 py-4 rounded-2xl border border-gray-100 focus:border-rose-300 outline-none transition-all shadow-sm"
                 required
               />
             </div>
@@ -204,7 +204,7 @@ const AdminDashboard = () => {
               <button
                 type="submit"
                 disabled={isBroadcasting}
-                className="w-full flex items-center justify-center gap-2 px-5 py-4 bg-rose-600 text-white rounded-2xl font-bold hover:bg-rose-700 transition-all shadow-lg shadow-rose-950/20 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full flex items-center justify-center gap-2 px-5 py-4 bg-rose-500 text-white rounded-2xl font-bold hover:bg-rose-600 transition-all shadow-lg shadow-rose-100 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isBroadcasting ? <RefreshCw className="w-5 h-5 animate-spin" /> : <Send className="w-5 h-5" />}
                 Send Broadcast
@@ -217,7 +217,7 @@ const AdminDashboard = () => {
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4 mb-10">
           {loadingStats 
             ? Array(5).fill(0).map((_, i) => (
-                <div key={i} className="bg-navy-700 p-6 rounded-[24px] border border-navy-600 shadow-sm space-y-4">
+                <div key={i} className="bg-white p-6 rounded-[24px] border border-gray-100 shadow-sm space-y-4">
                   <Skeleton width={48} height={48} />
                   <div className="space-y-2">
                     <Skeleton width="60%" height={12} />
@@ -234,9 +234,9 @@ const AdminDashboard = () => {
         {/* Charts + Activity Feed */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-10">
           {/* Revenue Chart */}
-          <div className="lg:col-span-2 bg-navy-700 p-8 rounded-[32px] border border-navy-600 shadow-xl shadow-black/20">
-            <h2 className="text-lg font-black text-navy-100 mb-6 flex items-center gap-2">
-              <TrendingUp className="w-5 h-5 text-gold" />
+          <div className="lg:col-span-2 bg-white p-8 rounded-[32px] border border-gray-100 shadow-[0_8px_30px_rgb(0,0,0,0.04)]">
+            <h2 className="text-lg font-black text-gray-900 mb-6 flex items-center gap-2">
+              <TrendingUp className="w-5 h-5 text-indigo-600" />
               Monthly Revenue Trend
             </h2>
             {loadingStats ? (
@@ -245,7 +245,7 @@ const AdminDashboard = () => {
               <RevenueChart
                 data={monthlySales}
                 lines={[
-                  { key: 'revenue', label: 'Revenue ($)', color: '#C9A84C' },
+                  { key: 'revenue', label: 'Revenue ($)', color: '#6366f1' },
                   { key: 'bookings', label: 'Bookings', color: '#10b981' },
                 ]}
               />
@@ -253,9 +253,9 @@ const AdminDashboard = () => {
           </div>
 
           {/* Recent Activity */}
-          <div className="bg-navy-700 p-8 rounded-[32px] border border-navy-600 shadow-xl shadow-black/20 flex flex-col">
-            <h2 className="text-lg font-black text-navy-100 mb-6 flex items-center gap-2">
-              <Activity className="w-5 h-5 text-gold" />
+          <div className="bg-white p-8 rounded-[32px] border border-gray-100 shadow-[0_8px_30px_rgb(0,0,0,0.04)] flex flex-col">
+            <h2 className="text-lg font-black text-gray-900 mb-6 flex items-center gap-2">
+              <Activity className="w-5 h-5 text-indigo-600" />
               Recent Bookings
             </h2>
             {loadingStats ? (
@@ -271,26 +271,26 @@ const AdminDashboard = () => {
                 ))}
               </div>
             ) : recentBookings.length === 0 ? (
-              <div className="flex-1 flex items-center justify-center text-navy-500 text-sm font-bold">No recent activity</div>
+              <div className="flex-1 flex items-center justify-center text-gray-400 text-sm font-bold">No recent activity</div>
             ) : (
-              <div className="space-y-3 overflow-y-auto flex-1 pr-2" style={{ maxHeight: 280 }}>
+              <div className="space-y-3 overflow-y-auto flex-1" style={{ maxHeight: 280 }}>
                 {recentBookings.map((b, i) => (
                   <motion.div
                     key={b._id}
                     initial={{ opacity: 0, x: 10 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: i * 0.04 }}
-                    className="flex items-start gap-3 p-3 rounded-2xl bg-navy-800 border border-navy-600"
+                    className="flex items-start gap-3 p-3 rounded-2xl bg-slate-50 border border-gray-100"
                   >
-                    <div className="w-8 h-8 rounded-xl bg-navy-900 border border-navy-600 flex items-center justify-center text-gold font-black text-sm shrink-0">
+                    <div className="w-8 h-8 rounded-xl bg-indigo-100 flex items-center justify-center text-indigo-600 font-black text-sm shrink-0">
                       {b.user?.name?.charAt(0) || '?'}
                     </div>
                     <div className="min-w-0">
-                      <p className="font-bold text-navy-100 text-xs truncate">{b.user?.name}</p>
-                      <p className="text-[10px] text-navy-400 truncate">
+                      <p className="font-bold text-gray-900 text-xs truncate">{b.user?.name}</p>
+                      <p className="text-[10px] text-gray-400 truncate">
                         {b.event?.title} • {b.quantity} ticket{b.quantity > 1 ? 's' : ''} • ${b.totalAmount}
                       </p>
-                      <p className="text-[10px] text-navy-500">
+                      <p className="text-[10px] text-gray-400">
                         {b.createdAt ? format(new Date(b.createdAt), 'MMM dd, HH:mm') : ''}
                       </p>
                     </div>
@@ -305,11 +305,8 @@ const AdminDashboard = () => {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Create Organizer */}
           <div className="lg:col-span-1">
-            <div className="bg-navy-700 p-6 rounded-[24px] border border-navy-600 shadow-xl shadow-black/20">
-              <h2 className="text-xl font-bold mb-6 text-gold flex items-center gap-2">
-                <Plus className="w-5 h-5" />
-                Create Organizer
-              </h2>
+            <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+              <h2 className="text-xl font-bold mb-4 text-purple-600">Create Organizer</h2>
               <form onSubmit={handleCreateOrganizer} className="space-y-4">
                 <div>
                   <input
@@ -317,7 +314,7 @@ const AdminDashboard = () => {
                     placeholder="Organizer Name"
                     value={orgName}
                     onChange={(e) => setOrgName(e.target.value)}
-                    className="w-full px-4 py-3 rounded-xl bg-navy-800 border border-navy-600 focus:border-gold outline-none transition-all text-navy-100 placeholder-navy-500"
+                    className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-purple-400 outline-none transition-colors"
                     required
                   />
                 </div>
@@ -327,7 +324,7 @@ const AdminDashboard = () => {
                     placeholder="Yahoo email (@yahoo.com)"
                     value={orgEmail}
                     onChange={(e) => setOrgEmail(e.target.value)}
-                    className="w-full px-4 py-3 rounded-xl bg-navy-800 border border-navy-600 focus:border-gold outline-none transition-all text-navy-100 placeholder-navy-500"
+                    className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-purple-400 outline-none transition-colors"
                     required
                   />
                 </div>
@@ -337,20 +334,20 @@ const AdminDashboard = () => {
                     placeholder="Password"
                     value={orgPassword}
                     onChange={(e) => setOrgPassword(e.target.value)}
-                    className="w-full px-4 py-3 pr-12 rounded-xl bg-navy-800 border border-navy-600 focus:border-gold outline-none transition-all text-navy-100 placeholder-navy-500"
+                    className="w-full px-4 py-3 pr-12 rounded-xl border border-gray-200 focus:border-purple-400 outline-none transition-colors"
                     required
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-navy-400 hover:text-gold"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
                   >
                     {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                   </button>
                 </div>
                 <button
                   type="submit"
-                  className="w-full bg-gold text-navy-900 py-3 rounded-xl font-bold hover:bg-[#b8963e] transition-all shadow-lg shadow-gold/10"
+                  className="w-full bg-purple-600 text-white py-3 rounded-xl font-bold hover:bg-purple-700 transition-colors"
                 >
                   Create Organizer
                 </button>
@@ -359,20 +356,21 @@ const AdminDashboard = () => {
           </div>
 
           {/* Event Mgmt hint */}
-          <div className="lg:col-span-2 bg-navy-700 p-8 rounded-[32px] border border-navy-600 shadow-xl shadow-black/20 flex flex-col items-center justify-center text-center gap-4">
-            <div className="w-16 h-16 bg-navy-800 rounded-3xl flex items-center justify-center border border-navy-600">
-              <Calendar className="w-8 h-8 text-gold" />
+          <div className="lg:col-span-2 bg-white p-8 rounded-[32px] border border-gray-100 shadow-[0_8px_30px_rgb(0,0,0,0.04)] flex flex-col items-center justify-center text-center gap-4">
+            <div className="w-16 h-16 bg-indigo-50 rounded-3xl flex items-center justify-center">
+              <Calendar className="w-8 h-8 text-indigo-400" />
             </div>
-            <h3 className="text-xl font-black text-navy-100">Event Management</h3>
-            <p className="text-navy-400 text-sm max-w-xs">Browse, edit, or delete any event on the platform directly from the events listing page.</p>
+            <h3 className="text-xl font-black text-gray-900">Event Management</h3>
+            <p className="text-gray-500 text-sm max-w-xs">Browse, edit, or delete any event on the platform directly from the events listing page.</p>
             <button
               onClick={() => navigate('/events')}
-              className="mt-2 px-8 py-3 bg-navy-800 border border-navy-600 text-gold font-bold rounded-2xl hover:border-gold transition-all shadow-sm"
+              className="mt-2 px-6 py-3 bg-indigo-600 text-white font-bold rounded-2xl hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-100"
             >
               View All Events
             </button>
           </div>
         </div>
+
       </div>
     </div>
   );

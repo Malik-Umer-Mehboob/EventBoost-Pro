@@ -65,29 +65,28 @@ const EditEvent: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-navy-900 flex flex-col items-center justify-center pt-24 gap-6">
-        <Loader2 className="w-12 h-12 text-gold animate-spin" />
-        <p className="text-navy-500 font-black text-[10px] uppercase tracking-[0.3em]">Retrieving Operational Data...</p>
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center pt-24">
+        <Loader2 className="w-12 h-12 text-indigo-600 animate-spin" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-navy-900 py-12 px-4 sm:px-6 lg:px-8 pt-32 text-navy-200">
-      <div className="max-w-4xl mx-auto mb-10">
+    <div className="min-h-screen bg-slate-50 py-12 px-4 sm:px-6 lg:px-8 pt-24">
+      <div className="max-w-4xl mx-auto mb-8">
         <motion.div
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
         >
             <button 
                 onClick={() => navigate(-1)}
-                className="flex items-center gap-2 text-navy-500 hover:text-gold transition-colors font-black uppercase tracking-widest text-[10px] mb-3"
+                className="flex items-center gap-2 text-gray-500 hover:text-indigo-600 transition-colors font-medium mb-2"
             >
-                <ArrowLeft className="w-4 h-4" />
-                Back to Dashboard
+                <ArrowLeft className="w-5 h-5" />
+                Back
             </button>
-            <h1 className="text-5xl font-black text-navy-100 flex items-center gap-4 tracking-tight">
-                <Edit3 className="text-gold w-10 h-10" />
+            <h1 className="text-4xl font-black text-gray-900 flex items-center gap-3">
+                <Edit3 className="text-indigo-600 w-8 h-8" />
                 Edit Event
             </h1>
         </motion.div>

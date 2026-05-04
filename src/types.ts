@@ -35,8 +35,6 @@ export interface Event {
   };
   attendees?: string[];
   status?: 'active' | 'cancelled' | 'resubmitted';
-  averageRating?: number;
-  totalReviews?: number;
 }
 
 export interface Booking {

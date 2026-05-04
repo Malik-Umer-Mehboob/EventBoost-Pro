@@ -53,113 +53,93 @@ const Transactions: React.FC = () => {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'succeeded': return 'bg-emerald-950/30 text-emerald-400 border-emerald-900/50';
-      case 'refunded': return 'bg-amber-950/30 text-amber-400 border-amber-900/50';
-      case 'failed': return 'bg-rose-950/30 text-rose-400 border-rose-900/50';
-      default: return 'bg-navy-800 text-navy-400 border-navy-600';
+      case 'succeeded': return 'bg-emerald-100 text-emerald-700 border-emerald-200';
+      case 'refunded': return 'bg-amber-100 text-amber-700 border-amber-200';
+      case 'failed': return 'bg-rose-100 text-rose-700 border-rose-200';
+      default: return 'bg-slate-100 text-slate-700 border-slate-200';
     }
   };
 
   return (
-    <div className="min-h-screen bg-navy-900 pt-24 pb-12 px-4 sm:px-6 lg:px-8 text-navy-200">
+    <div className="min-h-screen bg-slate-50 pt-24 pb-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-4xl mx-auto">
         <div className="flex items-center justify-between mb-8">
-          <Link to="/user/dashboard" className="flex items-center gap-2 text-navy-400 hover:text-gold transition-colors font-black uppercase text-xs tracking-widest">
+          <Link to="/user/dashboard" className="flex items-center gap-2 text-gray-500 hover:text-indigo-600 transition-colors font-bold">
             <ArrowLeft className="w-5 h-5" />
             Back to Dashboard
           </Link>
           <button 
             onClick={fetchTransactions}
-            className="p-2 hover:bg-navy-800 rounded-full transition-colors group"
+            className="p-2 hover:bg-white rounded-full transition-colors group"
             title="Refresh"
           >
-            <RefreshCw className={`w-5 h-5 text-navy-500 group-hover:text-gold ${loading ? 'animate-spin' : ''}`} />
+            <RefreshCw className={`w-5 h-5 text-gray-400 group-hover:text-indigo-600 ${loading ? 'animate-spin' : ''}`} />
           </button>
         </div>
 
-        <div className="bg-navy-800/50 backdrop-blur-md p-8 sm:p-12 rounded-[40px] mb-8 border border-navy-600 shadow-2xl">
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-8 mb-12">
-            <div className="flex items-center gap-5">
-              <div className="p-4 bg-navy-950 rounded-2xl text-gold border border-navy-700 shadow-xl">
-                <Receipt className="w-8 h-8" />
-              </div>
-              <div>
-                <div className="flex items-center gap-2 text-gold mb-1">
-                  <CreditCard className="w-4 h-4" />
-                  <span className="text-[10px] font-black uppercase tracking-[0.3em]">Ledger Registry</span>
-                </div>
-                <h1 className="text-4xl font-black text-navy-100 tracking-tight">Payment History</h1>
-                <p className="text-navy-400 mt-1 font-medium">Archived logs of your secure transactional activity.</p>
-              </div>
+        <div className="bg-white p-8 sm:p-10 rounded-[32px] mb-8 border border-gray-100 shadow-[0_8px_30px_rgb(0,0,0,0.04)]">
+          <div className="flex items-center gap-4 mb-6">
+            <div className="p-3 bg-indigo-600/10 rounded-2xl text-indigo-600">
+              <Receipt className="w-8 h-8" />
+            </div>
+            <div>
+              <h1 className="text-3xl font-black text-gray-900">Payment History</h1>
+              <p className="text-gray-500 font-medium">View and manage your recent transactions.</p>
             </div>
           </div>
 
           {loading ? (
-            <div className="flex flex-col items-center justify-center py-24 gap-6">
-              <Loader2 className="w-12 h-12 text-gold animate-spin" />
-              <p className="text-navy-500 font-black tracking-[0.4em] uppercase text-[10px]">Retrieving Secure Logs...</p>
+            <div className="flex flex-col items-center justify-center py-20 gap-4">
+              <Loader2 className="w-10 h-10 text-indigo-600 animate-spin" />
+              <p className="text-gray-500 font-medium">Loading history...</p>
             </div>
           ) : error ? (
-            <div className="bg-rose-950/20 border border-rose-900/30 p-10 rounded-3xl text-center space-y-6">
-              <div className="w-20 h-20 bg-rose-950/40 rounded-full flex items-center justify-center mx-auto border border-rose-900/50">
-                <AlertCircle className="w-10 h-10 text-rose-500" />
-              </div>
-              <p className="text-rose-400 font-bold tracking-tight text-lg">{error}</p>
-              <button 
-                onClick={fetchTransactions} 
-                className="bg-rose-500 text-white px-8 py-3 rounded-2xl font-black uppercase tracking-widest text-xs hover:bg-rose-600 transition-all shadow-xl shadow-rose-500/20"
-              >
-                Retry Protocol
-              </button>
+            <div className="bg-rose-50 border border-rose-100 p-8 rounded-2xl text-center space-y-4">
+              <AlertCircle className="w-12 h-12 text-rose-500 mx-auto" />
+              <p className="text-rose-600 font-bold">{error}</p>
+              <button onClick={fetchTransactions} className="bg-rose-600 text-white px-6 py-2 rounded-xl font-bold">Retry</button>
             </div>
           ) : transactions.length === 0 ? (
-            <div className="text-center py-24 bg-navy-950/50 rounded-[2.5rem] border border-dashed border-navy-700">
-              <div className="bg-navy-900 inline-flex p-8 rounded-[2rem] mb-6 border border-navy-700 shadow-inner">
-                <CreditCard className="w-12 h-12 text-navy-700" />
+            <div className="text-center py-20 bg-white rounded-3xl border border-gray-100 shadow-sm">
+              <div className="bg-gray-100 inline-flex p-6 rounded-full mb-4">
+                <CreditCard className="w-10 h-10 text-gray-300" />
               </div>
-              <p className="text-navy-500 font-black uppercase tracking-widest text-[10px]">No historical data found</p>
+              <p className="text-gray-500 font-medium">No transactions yet.</p>
             </div>
           ) : (
-            <div className="space-y-5">
+            <div className="space-y-4">
               {transactions.map((tx) => (
-                <div key={tx._id} className="bg-navy-950/50 p-6 rounded-[2rem] border border-navy-700/50 hover:bg-white/[0.02] hover:border-navy-600 transition-all group flex flex-col md:flex-row md:items-center justify-between gap-6">
-                  <div className="flex items-center gap-5">
-                    <div className="w-14 h-14 rounded-2xl bg-navy-950 border border-navy-700 flex items-center justify-center text-navy-400 shadow-xl group-hover:text-gold group-hover:border-gold/20 transition-all">
-                      <Receipt className="w-7 h-7" />
+                <div key={tx._id} className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow flex flex-col md:flex-row md:items-center justify-between gap-4">
+                  <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 rounded-xl bg-slate-50 flex items-center justify-center text-slate-400">
+                      <CreditCard className="w-6 h-6" />
                     </div>
                     <div>
-                      <h3 className="font-black text-navy-100 tracking-tight text-lg group-hover:text-gold transition-colors">{tx.event?.title || 'System Transaction'}</h3>
-                      <div className="flex items-center gap-3 mt-1.5">
-                        <span className={`px-2 py-0.5 rounded text-[8px] font-black uppercase tracking-widest ${tx.type === 'refund' ? 'bg-rose-950 text-rose-400' : 'bg-navy-900 text-gold border border-gold/10'}`}>
-                          {tx.type === 'payment' ? 'Purchase' : 'Refund'}
-                        </span>
-                        <span className="text-[10px] text-navy-500 font-bold uppercase tracking-widest">
-                          {format(new Date(tx.createdAt), 'MMM dd, yyyy • HH:mm')}
-                        </span>
-                      </div>
+                      <h3 className="font-black text-gray-900">{tx.event?.title || 'Unknown Event'}</h3>
+                      <p className="text-sm text-gray-400 font-bold uppercase tracking-wider">
+                        {tx.type === 'payment' ? 'Purchase' : 'Refund'} • {format(new Date(tx.createdAt), 'MMM dd, yyyy HH:mm')}
+                      </p>
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-8 justify-between md:justify-end border-t border-navy-700/50 pt-4 md:border-none md:pt-0">
+                  <div className="flex items-center gap-6 justify-between md:justify-end">
                     <div className="text-right">
-                      <p className={`text-2xl font-black tracking-tighter ${tx.type === 'refund' ? 'text-rose-500' : 'text-navy-100'}`}>
-                        {tx.type === 'refund' ? '-' : ''}${tx.amount.toLocaleString()}
+                      <p className={`text-xl font-black ${tx.type === 'refund' ? 'text-rose-600' : 'text-gray-900'}`}>
+                        {tx.type === 'refund' ? '-' : ''}${tx.amount}
                       </p>
-                      <p className="text-[10px] text-navy-600 font-black uppercase tracking-widest leading-none mt-1">{tx.currency}</p>
+                      <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">{tx.currency}</p>
                     </div>
-                    <div className="flex flex-col items-end gap-3">
-                      <div className={`px-4 py-1.5 rounded-[5px] text-[10px] font-black uppercase tracking-widest border ${getStatusColor(tx.status)}`}>
-                        {tx.status}
-                      </div>
-                      {tx.type === 'payment' && tx.status === 'succeeded' && (
-                        <button 
-                          onClick={() => handleRefund(typeof tx.booking === 'string' ? tx.booking : tx.booking._id)}
-                          className="text-[10px] font-black uppercase tracking-[0.2em] text-rose-400/60 hover:text-rose-400 underline underline-offset-4 decoration-rose-500/10 transition-all"
-                        >
-                          Request Refund
-                        </button>
-                      )}
+                    <div className={`px-4 py-1.5 rounded-full text-xs font-black uppercase tracking-widest border ${getStatusColor(tx.status)}`}>
+                      {tx.status}
                     </div>
+                    {tx.type === 'payment' && tx.status === 'succeeded' && (
+                      <button 
+                        onClick={() => handleRefund(typeof tx.booking === 'string' ? tx.booking : tx.booking._id)}
+                        className="text-[10px] font-black uppercase tracking-tighter text-rose-500 hover:text-rose-700 underline underline-offset-4 decoration-rose-200 transition-colors"
+                      >
+                        Request Refund
+                      </button>
+                    )}
                   </div>
                 </div>
               ))}

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Sparkles, Search } from 'lucide-react';
@@ -7,19 +7,20 @@ import { useRealTime } from '../hooks/useRealTime';
 import { useAuth } from '../context/AuthContext';
 import { toast } from 'sonner';
 import EventCard from '../components/EventCard';
-import FilterBar from '../components/FilterBar';
+import EventFilters from '../components/events/EventFilters';
 import BookingModal from '../components/bookings/BookingModal';
 import Skeleton from '../components/common/Skeleton';
 import { cancelEventAdmin, deleteEventAdmin } from '../api/adminApi';
 import { deleteEvent } from '../api/eventApi';
-import { useSearchParams } from 'react-router-dom';
 
 const EventList: React.FC = () => {
   const [events, setEvents] = useState<EventData[]>([]);
+  const [filteredEvents, setFilteredEvents] = useState<EventData[]>([]);
   const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [activeCategory, setActiveCategory] = useState('');
   const { user } = useAuth();
   const navigate = useNavigate();
-  const [searchParams, setSearchParams] = useSearchParams();
   const [selectedEvent, setSelectedEvent] = useState<EventData | null>(null);
   const [isBookingModalOpen, setIsBookingModalOpen] = useState(false);
 
@@ -71,37 +72,20 @@ const EventList: React.FC = () => {
     }
   };
 
-  const fetchEvents = useCallback(async (params = {}) => {
-    setLoading(true);
-    try {
-      const data = await getPublicEvents(params);
-      setEvents(data);
-    } catch (error) {
-      console.error('Failed to fetch events:', error);
-      toast.error('Failed to load events');
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  // Handle filter changes from FilterBar
-  const handleFilterChange = useCallback((filters: any) => {
-    // Sync with URL
-    const newParams: any = {};
-    Object.entries(filters).forEach(([key, value]) => {
-      if (value) newParams[key] = value as string;
-    });
-    setSearchParams(newParams);
-    
-    // Fetch with new filters
-    fetchEvents(newParams);
-  }, [setSearchParams, fetchEvents]);
-
-  // Initial fetch from URL params
   useEffect(() => {
-    const params = Object.fromEntries(searchParams);
-    fetchEvents(params);
-  }, []); // Only on mount
+    const fetchEvents = async () => {
+      try {
+        const data = await getPublicEvents();
+        setEvents(data);
+        setFilteredEvents(data);
+      } catch (error) {
+        console.error('Failed to fetch events:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchEvents();
+  }, []);
 
   // Listen for real-time updates
   useEffect(() => {
@@ -129,41 +113,49 @@ const EventList: React.FC = () => {
     };
   }, [socket]);
 
-  // Removed local filtering effect since we now use server-side filtering
+  useEffect(() => {
+    let result = events;
+    if (searchTerm) {
+      result = result.filter((e: EventData) => e.title.toLowerCase().includes(searchTerm.toLowerCase()));
+    }
+    if (activeCategory) {
+      result = result.filter((e: EventData) => e.category === activeCategory);
+    }
+    setFilteredEvents(result);
+  }, [searchTerm, activeCategory, events]);
 
   return (
-    <div className="min-h-screen bg-navy-900 pt-24 pb-12 px-4 sm:px-6 lg:px-8 text-navy-200">
+    <div className="min-h-screen bg-slate-50 pt-24 pb-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="text-center mb-12">
             <motion.div
                 initial={{ opacity: 0, y: -20 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-navy-800 border border-navy-600 text-gold font-black text-[10px] uppercase tracking-widest mb-4"
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-indigo-50 text-indigo-600 font-bold text-sm mb-4"
             >
                 <Sparkles className="w-4 h-4" />
                 Discover Incredible Events
             </motion.div>
-            <h1 className="text-5xl md:text-6xl font-black text-navy-100 mb-4 tracking-tight">
-                Experience <span className="text-gold">The Magic</span>
+            <h1 className="text-5xl font-black text-gray-900 mb-4 tracking-tight">
+                Experience <span className="text-gradient">The Magic</span>
             </h1>
-            <p className="text-navy-400 text-lg max-w-2xl mx-auto font-medium">
+            <p className="text-gray-500 text-lg max-w-2xl mx-auto">
                 Discover and book tickets for the best events in your city. From music festivals to workshops, we've got it all.
             </p>
         </div>
 
         {/* Filters */}
-        <FilterBar 
-          onFilterChange={handleFilterChange} 
-          totalResults={events.length}
-          initialFilters={Object.fromEntries(searchParams)}
+        <EventFilters 
+          onSearch={setSearchTerm} 
+          onFilterChange={setActiveCategory} 
         />
 
         {/* List */}
         {loading ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 px-2">
             {Array(6).fill(0).map((_, i) => (
-              <div key={i} className="bg-navy-700 rounded-[32px] overflow-hidden shadow-sm border border-navy-600">
+              <div key={i} className="bg-white rounded-[32px] overflow-hidden shadow-sm border border-gray-100">
                 <Skeleton width="100%" height={240} className="rounded-none" />
                 <div className="p-7 space-y-4">
                   <div className="flex justify-between">
@@ -181,12 +173,12 @@ const EventList: React.FC = () => {
             ))}
           </div>
         ) : (
-          <AnimatePresence mode='popLayout'>
+          <AnimatePresence>
             <motion.div 
                layout
                className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8"
             >
-              {events.map((event: EventData) => (
+              {filteredEvents.map((event: EventData) => (
                 <motion.div
                   key={event._id}
                   layout
@@ -210,26 +202,20 @@ const EventList: React.FC = () => {
           </AnimatePresence>
         )}
 
-        {!loading && events.length === 0 && (
-          <div className="text-center py-24 bg-navy-700 rounded-[32px] border border-dashed border-navy-600 shadow-xl shadow-black/20">
-            <div className="bg-navy-800 inline-flex p-6 rounded-full mb-4">
-                <Search className="w-12 h-12 text-navy-500" />
+        {!loading && filteredEvents.length === 0 && (
+          <div className="text-center py-24 bg-white rounded-[32px] border border-gray-100 shadow-[0_8px_30px_rgb(0,0,0,0.04)]">
+            <div className="bg-gray-50 inline-flex p-6 rounded-full mb-4">
+                <Search className="w-12 h-12 text-gray-300" />
             </div>
-            <h3 className="text-xl font-black text-navy-100">No events found</h3>
-            <p className="text-navy-400 font-medium">Try adjusting your filters or search term.</p>
-            <button 
-                onClick={() => handleFilterChange({})}
-                className="mt-6 px-8 py-3 bg-gold text-navy-900 rounded-2xl font-bold hover:bg-[#b8963e] transition-all shadow-lg shadow-gold/10"
-            >
-                Clear All Filters
-            </button>
+            <h3 className="text-xl font-bold text-gray-800">No events found</h3>
+            <p className="text-gray-500">Try adjusting your filters or search term.</p>
           </div>
         )}
 
         <BookingModal 
-          event={selectedEvent} 
-          isOpen={isBookingModalOpen} 
-          onClose={() => setIsBookingModalOpen(false)} 
+          event={selectedEvent}
+          isOpen={isBookingModalOpen}
+          onClose={() => setIsBookingModalOpen(false)}
         />
       </div>
     </div>
