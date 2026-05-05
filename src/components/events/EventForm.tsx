@@ -16,7 +16,9 @@ const EventForm: React.FC<EventFormProps> = ({ initialData, onSubmit, isLoading 
       title: '',
       description: '',
       date: '',
+      endDate: '',
       location: '',
+      venue: '',
       category: '',
       ticketPrice: 0,
       ticketQuantity: 0,
@@ -125,7 +127,7 @@ const EventForm: React.FC<EventFormProps> = ({ initialData, onSubmit, isLoading 
             </div>
 
             <div>
-              <label className={labelClass}>Date & Time</label>
+              <label className={labelClass}>Start Date & Time</label>
               <div className="relative">
                 <Calendar className={iconClass} />
                 <input
@@ -138,25 +140,76 @@ const EventForm: React.FC<EventFormProps> = ({ initialData, onSubmit, isLoading 
                 />
               </div>
             </div>
+
+            {/* End Date */}
+            <div>
+              <label style={{ color: '#7A94AA', fontSize: '13px', display: 'block', marginBottom: '6px' }}>
+                End Date & Time
+              </label>
+              <input
+                type="datetime-local"
+                name="endDate"
+                value={formData.endDate ? new Date(formData.endDate).toISOString().slice(0, 16) : ''}
+                onChange={handleChange}
+                style={{
+                  width: '100%',
+                  background: '#0F1C2E',
+                  border: '1px solid #2E4A63',
+                  borderRadius: '8px',
+                  padding: '10px 12px',
+                  color: '#EDF2F7',
+                  fontSize: '13px',
+                  outline: 'none',
+                }}
+                onFocus={e => e.target.style.borderColor = '#C9A84C'}
+                onBlur={e => e.target.style.borderColor = '#2E4A63'}
+              />
+            </div>
           </div>
         </div>
 
         {/* Right Column: Logistics & Image */}
         <div className="space-y-4">
           <div>
-            <label className={labelClass}>Location</label>
+            <label className={labelClass}>Venue / Address</label>
             <div className="relative">
               <MapPin className={iconClass} />
               <input
                 type="text"
-                name="location"
+                name="venue"
                 required
-                value={formData.location}
+                value={formData.venue}
                 onChange={handleChange}
                 className={inputClass}
                 placeholder="e.g. Grand Plaza, NYC"
               />
             </div>
+          </div>
+
+          {/* Location */}
+          <div>
+            <label style={{ color: '#7A94AA', fontSize: '13px', display: 'block', marginBottom: '6px' }}>
+              City / Location
+            </label>
+            <input
+              type="text"
+              name="location"
+              placeholder="e.g. Karachi, Lahore, Islamabad"
+              value={formData.location || ''}
+              onChange={handleChange}
+              style={{
+                width: '100%',
+                background: '#0F1C2E',
+                border: '1px solid #2E4A63',
+                borderRadius: '8px',
+                padding: '10px 12px',
+                color: '#EDF2F7',
+                fontSize: '13px',
+                outline: 'none',
+              }}
+              onFocus={e => e.target.style.borderColor = '#C9A84C'}
+              onBlur={e => e.target.style.borderColor = '#2E4A63'}
+            />
           </div>
 
           <div className="grid grid-cols-2 gap-4">

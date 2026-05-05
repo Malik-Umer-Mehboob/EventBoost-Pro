@@ -137,7 +137,7 @@ const EventCard: React.FC<EventCardProps> = ({
         <div className="grid grid-cols-1 gap-3">
           {onBuy && !isRegistered && (
             <button
-              onClick={() => onBuy(event)}
+              onClick={(e) => { e.stopPropagation(); onBuy(event); }}
               disabled={isSoldOut || isOwner || isAdmin}
               className={`w-full py-3 rounded-xl font-semibold text-sm flex items-center justify-center gap-2 transition-all ${
                 isSoldOut || isOwner || isAdmin
@@ -171,14 +171,14 @@ const EventCard: React.FC<EventCardProps> = ({
             <div className="flex flex-col gap-3">
               <div className="grid grid-cols-2 gap-3">
                 <button
-                  onClick={() => onEdit && onEdit(event)}
+                  onClick={(e) => { e.stopPropagation(); onEdit && onEdit(event); }}
                   className="flex-1 bg-[#1A2B3D] border border-[#2E4A63] text-[#B8C5D3] py-3.5 rounded-2xl font-black text-xs uppercase tracking-widest flex items-center justify-center gap-2 hover:border-[#C9A84C] hover:text-[#C9A84C] transition-all"
                 >
                   <Edit3 className="w-4 h-4" />
                   Edit
                 </button>
                 <button
-                  onClick={() => onDelete && onDelete(event._id!)}
+                  onClick={(e) => { e.stopPropagation(); onDelete && onDelete(event._id!); }}
                   className="flex-1 bg-[#1A2B3D] border border-[#2E4A63] text-[#B8C5D3] py-3.5 rounded-2xl font-black text-xs uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-rose-900/20 hover:text-rose-400 hover:border-rose-700/40 transition-all"
                 >
                   <Trash2 className="w-4 h-4 text-rose-400" />
@@ -188,7 +188,7 @@ const EventCard: React.FC<EventCardProps> = ({
 
               {isAdmin && !isCancelled && (
                 <button
-                  onClick={() => onCancel && onCancel(event._id!)}
+                  onClick={(e) => { e.stopPropagation(); onCancel && onCancel(event._id!); }}
                   className="w-full bg-rose-600 text-white py-3.5 rounded-2xl font-black text-xs uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-rose-700 transition-all"
                 >
                   <RefreshCw className="w-4 h-4" />

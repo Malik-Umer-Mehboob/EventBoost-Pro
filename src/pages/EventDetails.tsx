@@ -26,8 +26,11 @@ const EventDetails: React.FC = () => {
   const [hasTicket, setHasTicket] = useState(false);
   const [isAnnouncementOpen, setIsAnnouncementOpen] = useState(false);
   const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
+  const [waitlistStatus, setWaitlistStatus] = useState<string | null>(null);
+  const [waitlistPosition, setWaitlistPosition] = useState<number | null>(null);
 
   const { socket, joinEvent, leaveEvent } = useRealTime();
+  const token = (user as any)?.token;
 
   const isOwner = user?._id === (event?.organizer?._id || event?.createdBy?._id);
   const isAdmin = user?.role === 'admin';
@@ -93,31 +96,52 @@ const EventDetails: React.FC = () => {
     };
   }, [id, socket, joinEvent, leaveEvent, fetchWaitlistStatus]);
 
+  // Check waitlist status on page load
+  useEffect(() => {
+    if (user && event && (event.soldTickets || 0) >= event.ticketQuantity) {
+      axios.get(`/waitlist/position/${event._id}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      })
+      .then(res => {
+        setWaitlistStatus(res.data.status);
+        setWaitlistPosition(res.data.position);
+      })
+      .catch(() => {
+        setWaitlistStatus(null);
+      });
+    }
+  }, [event, user, token]);
+
   const handleJoinWaitlist = async () => {
     if (!user) {
       toast.error('Please login to join the waitlist');
       navigate('/login');
       return;
     }
-    setJoiningWaitlist(true);
+    if (!event?._id) return;
+
     try {
-      const data = await joinWaitlist(id!);
-      setWaitlistInfo(data);
-      toast.success(`Joined waitlist at position #${data.position}`);
-    } catch (error: any) {
-      toast.error(error.response?.data?.message || 'Failed to join waitlist');
-    } finally {
-      setJoiningWaitlist(false);
+      const res = await axios.post(`/waitlist/join/${event._id}`, {}, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setWaitlistStatus('waiting');
+      setWaitlistPosition(res.data.position);
+      toast.success(`You joined the waitlist at position #${res.data.position}`);
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || 'Could not join waitlist');
     }
   };
 
   const handleLeaveWaitlist = async () => {
     try {
-      await leaveWaitlist(id!);
-      setWaitlistInfo(null);
-      toast.success('Removed from waitlist');
-    } catch (error) {
-      toast.error('Failed to leave waitlist');
+      await axios.delete(`/waitlist/leave/${event?._id}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setWaitlistStatus(null);
+      setWaitlistPosition(null);
+      toast.success('You have left the waitlist');
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || 'Could not leave waitlist');
     }
   };
 
@@ -390,7 +414,72 @@ const EventDetails: React.FC = () => {
               </div>
 
               {/* Action Button: Buy / Join Waitlist / Position */}
-              {!isSoldOut || isNotified ? (
+              {(event.soldTickets || 0) >= event.ticketQuantity ? (
+                <div>
+                  {/* Sold Out Badge */}
+                  <div style={{
+                    background: 'rgba(226,75,74,0.12)',
+                    border: '1px solid rgba(226,75,74,0.3)',
+                    color: '#E24B4A',
+                    borderRadius: '8px',
+                    padding: '10px 16px',
+                    textAlign: 'center',
+                    fontWeight: '500',
+                    marginBottom: '12px'
+                  }}>
+                    🎟️ Sold Out
+                  </div>
+
+                  {/* Waitlist Button */}
+                  {waitlistStatus === 'waiting' || waitlistStatus === 'notified' ? (
+                    <div>
+                      <div style={{
+                        background: 'rgba(201,168,76,0.12)',
+                        border: '1px solid rgba(201,168,76,0.3)',
+                        color: '#C9A84C',
+                        borderRadius: '8px',
+                        padding: '10px 16px',
+                        textAlign: 'center',
+                        marginBottom: '8px'
+                      }}>
+                        ✅ You are #{waitlistPosition} on the waitlist
+                      </div>
+                      <button
+                        onClick={handleLeaveWaitlist}
+                        style={{
+                          width: '100%',
+                          padding: '10px',
+                          background: 'transparent',
+                          border: '1px solid rgba(226,75,74,0.3)',
+                          color: '#E24B4A',
+                          borderRadius: '8px',
+                          cursor: 'pointer',
+                          fontSize: '14px'
+                        }}
+                      >
+                        Leave Waitlist
+                      </button>
+                    </div>
+                  ) : (
+                    <button
+                      onClick={handleJoinWaitlist}
+                      style={{
+                        width: '100%',
+                        padding: '12px',
+                        background: 'transparent',
+                        border: '1px solid #C9A84C',
+                        color: '#C9A84C',
+                        borderRadius: '8px',
+                        cursor: 'pointer',
+                        fontSize: '14px',
+                        fontWeight: '500'
+                      }}
+                    >
+                      🔔 Join Waitlist
+                    </button>
+                  )}
+                </div>
+              ) : (
                 <CheckoutButton
                   eventId={event._id!}
                   quantity={quantity}
@@ -398,38 +487,6 @@ const EventDetails: React.FC = () => {
                   isOwner={isOwner}
                   isAdmin={isAdmin}
                 />
-              ) : (
-                <div className="space-y-4">
-                  {waitlistInfo?.position ? (
-                    <div className="bg-[#1A2B3D] border border-[#2E4A63] rounded-2xl p-6 text-center space-y-4 shadow-xl relative overflow-hidden group">
-                      <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-[#C9A84C]/0 via-[#C9A84C] to-[#C9A84C]/0 opacity-50" />
-                      <div>
-                        <p className="text-[#7A94AA] text-xs font-bold uppercase tracking-widest mb-1">Your Position</p>
-                        <p className="text-4xl font-black text-[#C9A84C]">#{waitlistInfo.position}</p>
-                      </div>
-                      <p className="text-xs text-[#5A7A94] leading-relaxed">
-                        We'll notify you if a spot opens up. You'll have 24 hours to buy.
-                      </p>
-                      <button
-                        onClick={handleLeaveWaitlist}
-                        className="w-full py-3 px-4 text-xs font-bold text-rose-400 border border-rose-900/30 rounded-xl hover:bg-rose-900/10 transition-all"
-                      >
-                        Leave Waitlist
-                      </button>
-                    </div>
-                  ) : (
-                    <motion.button
-                      whileHover={{ scale: 1.02 }}
-                      whileTap={{ scale: 0.98 }}
-                      onClick={handleJoinWaitlist}
-                      disabled={joiningWaitlist}
-                      className="w-full py-4 px-8 rounded-2xl font-bold bg-transparent border-2 border-[#C9A84C] text-[#C9A84C] hover:bg-[#C9A84C]/5 transition-all flex items-center justify-center gap-3 shadow-lg"
-                    >
-                      {joiningWaitlist ? <Loader2 className="w-5 h-5 animate-spin" /> : <Clock className="w-5 h-5" />}
-                      Join Waitlist
-                    </motion.button>
-                  )}
-                </div>
               )}
 
               <p className="text-[10px] text-[#5A7A94] text-center mt-6 font-medium leading-relaxed">

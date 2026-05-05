@@ -94,8 +94,15 @@ const EventList: React.FC = () => {
       setLoading(true);
       try {
         // Prepare params for API (convert 'All' to empty string for category)
-        const apiParams = { ...filters };
-        if (apiParams.category === 'All') apiParams.category = '';
+        const apiParams: any = {};
+        if (filters.search) apiParams.search = filters.search;
+        if (filters.category && filters.category !== 'All') apiParams.category = filters.category;
+        if (filters.city && filters.city.trim() !== '') apiParams.city = filters.city.trim();
+        if (filters.minPrice !== '') apiParams.minPrice = filters.minPrice;
+        if (filters.maxPrice !== '') apiParams.maxPrice = filters.maxPrice;
+        if (filters.startDate) apiParams.startDate = filters.startDate;
+        if (filters.endDate) apiParams.endDate = filters.endDate;
+        if (filters.sort) apiParams.sort = filters.sort;
         
         const data = await getPublicEvents(apiParams);
         setEvents(data);
@@ -201,6 +208,8 @@ const EventList: React.FC = () => {
                       animate={{ opacity: 1, scale: 1 }}
                       exit={{ opacity: 0, scale: 0.95 }}
                       transition={{ duration: 0.3 }}
+                      onClick={() => navigate(`/events/${event._id}`)}
+                      style={{ cursor: 'pointer' }}
                     >
                       <EventCard
                         event={event}

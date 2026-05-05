@@ -20,6 +20,26 @@ const CATEGORIES = [
   'Other',
 ];
 
+// Pakistan cities list
+const PAKISTAN_CITIES = [
+  'Karachi', 'Lahore', 'Islamabad', 'Rawalpindi', 'Faisalabad',
+  'Multan', 'Peshawar', 'Quetta', 'Sialkot', 'Gujranwala',
+  'Hyderabad', 'Abbottabad', 'Bahawalpur', 'Sargodha', 'Sukkur',
+  'Larkana', 'Sheikhupura', 'Rahim Yar Khan', 'Jhang', 'Gujrat',
+  'Mardan', 'Kasur', 'Dera Ghazi Khan', 'Nawabshah', 'Sahiwal',
+  'Mirpur Khas', 'Okara', 'Mingora', 'Chiniot', 'Turbat'
+];
+
+// Quick price options
+const PRICE_PRESETS = [
+  { label: 'Free', min: '0', max: '0' },
+  { label: 'Under 500', min: '0', max: '500' },
+  { label: '500 – 1,000', min: '500', max: '1000' },
+  { label: '1,000 – 2,000', min: '1000', max: '2000' },
+  { label: '2,000 – 5,000', min: '2000', max: '5000' },
+  { label: '5,000+', min: '5000', max: '' },
+];
+
 const FilterBar: React.FC<FilterBarProps> = ({ onFilterChange, totalResults }) => {
   const [isMobileOpen, setIsMobileOpen] = useState(false);
   
@@ -39,30 +59,37 @@ const FilterBar: React.FC<FilterBarProps> = ({ onFilterChange, totalResults }) =
   };
 
   const [filters, setFilters] = useState(getInitialFilters());
-  const [debouncedSearch, setDebouncedSearch] = useState(filters.search);
+  
+  // Separate display state (what user types) from actual filter state (what gets sent to API)
+  const [inputValues, setInputValues] = useState({
+    search: filters.search,
+    city: filters.city,
+    minPrice: filters.minPrice,
+    maxPrice: filters.maxPrice,
+  });
 
-  // Debounce search term
+  const [cityDropdownOpen, setCityDropdownOpen] = useState(false);
+  const [filteredCities, setFilteredCities] = useState(PAKISTAN_CITIES);
+
+  // Debounce — wait 600ms after user stops typing, THEN update filters
   useEffect(() => {
     const timer = setTimeout(() => {
-      setDebouncedSearch(filters.search);
-    }, 500);
-    return () => clearTimeout(timer);
-  }, [filters.search]);
+      setFilters(prev => ({
+        ...prev,
+        search: inputValues.search,
+        city: inputValues.city,
+        minPrice: inputValues.minPrice,
+        maxPrice: inputValues.maxPrice,
+      }));
+    }, 600);
 
-  // Trigger filter change when filters or debounced search changes
+    return () => clearTimeout(timer);
+  }, [inputValues.search, inputValues.city, inputValues.minPrice, inputValues.maxPrice]);
+
+  // Trigger filter change when filters state changes
   useEffect(() => {
-    const activeFilters = { ...filters, search: debouncedSearch };
-    onFilterChange(activeFilters);
-  }, [
-    debouncedSearch,
-    filters.category,
-    filters.city,
-    filters.minPrice,
-    filters.maxPrice,
-    filters.startDate,
-    filters.endDate,
-    filters.sort,
-  ]);
+    onFilterChange(filters);
+  }, [filters]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -70,6 +97,7 @@ const FilterBar: React.FC<FilterBarProps> = ({ onFilterChange, totalResults }) =
   };
 
   const handleClearFilters = () => {
+    setInputValues({ search: '', city: '', minPrice: '', maxPrice: '' });
     setFilters({
       search: '',
       category: 'All',
@@ -104,48 +132,185 @@ const FilterBar: React.FC<FilterBarProps> = ({ onFilterChange, totalResults }) =
         </div>
       </div>
 
-      {/* City Filter */}
-      <div className="space-y-1.5">
-        <label className="text-[13px] font-medium text-[#7A94AA] ml-1">Location</label>
-        <div className="relative group">
-          <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 text-[#5A7A94] group-focus-within:text-[#C9A84C] transition-colors w-4 h-4" />
-          <input
-            type="text"
-            name="city"
-            placeholder="Filter by city..."
-            value={filters.city}
-            onChange={handleInputChange}
-            className="w-full pl-11 pr-4 py-3 bg-[#0F1C2E] border border-[#2E4A63] rounded-xl text-[#EDF2F7] placeholder-[#3D5A73] focus:border-[#C9A84C] outline-none transition-all text-sm"
-          />
-        </div>
+      {/* Location with dropdown */}
+      <div style={{ position: 'relative' }}>
+        <label style={{ color: '#7A94AA', fontSize: '12px', display: 'block', marginBottom: '6px' }}>
+          Location
+        </label>
+        <input
+          type="text"
+          placeholder="Search city..."
+          value={inputValues.city}
+          onChange={(e) => {
+            const val = e.target.value;
+            setInputValues(prev => ({ ...prev, city: val }));
+            setFilteredCities(
+              PAKISTAN_CITIES.filter(c => c.toLowerCase().includes(val.toLowerCase()))
+            );
+            setCityDropdownOpen(true);
+          }}
+          onFocus={() => {
+            setFilteredCities(PAKISTAN_CITIES);
+            setCityDropdownOpen(true);
+          }}
+          onBlur={() => setTimeout(() => setCityDropdownOpen(false), 200)}
+          style={{
+            width: '100%',
+            background: '#0F1C2E',
+            border: '1px solid #2E4A63',
+            borderRadius: '7px',
+            padding: '8px 12px',
+            color: '#EDF2F7',
+            fontSize: '13px',
+            outline: 'none',
+          }}
+          onMouseEnter={e => e.currentTarget.style.borderColor = '#C9A84C'}
+          onMouseLeave={e => e.currentTarget.style.borderColor = inputValues.city ? '#C9A84C' : '#2E4A63'}
+        />
+
+        {/* Dropdown list */}
+        {cityDropdownOpen && filteredCities.length > 0 && (
+          <div style={{
+            position: 'absolute',
+            top: '100%',
+            left: 0,
+            right: 0,
+            background: '#1A2B3D',
+            border: '1px solid #2E4A63',
+            borderRadius: '8px',
+            marginTop: '4px',
+            maxHeight: '200px',
+            overflowY: 'auto',
+            zIndex: 999,
+            boxShadow: '0 8px 24px rgba(0,0,0,0.4)',
+          }}>
+            {/* Clear option */}
+            <div
+              onMouseDown={() => {
+                setInputValues(prev => ({ ...prev, city: '' }));
+                setFilters(prev => ({ ...prev, city: '' }));
+                setCityDropdownOpen(false);
+              }}
+              style={{
+                padding: '8px 12px',
+                fontSize: '12px',
+                color: '#5A7A94',
+                cursor: 'pointer',
+                borderBottom: '1px solid #2E4A63',
+              }}
+              onMouseEnter={e => e.currentTarget.style.background = 'rgba(201,168,76,0.05)'}
+              onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+            >
+              All Cities
+            </div>
+
+            {filteredCities.map((city) => (
+              <div
+                key={city}
+                onMouseDown={() => {
+                  setInputValues(prev => ({ ...prev, city }));
+                  setFilters(prev => ({ ...prev, city }));
+                  setCityDropdownOpen(false);
+                }}
+                style={{
+                  padding: '8px 12px',
+                  fontSize: '13px',
+                  color: '#B8C5D3',
+                  cursor: 'pointer',
+                  transition: 'all 0.15s',
+                }}
+                onMouseEnter={e => {
+                  e.currentTarget.style.background = 'rgba(201,168,76,0.08)';
+                  e.currentTarget.style.color = '#C9A84C';
+                }}
+                onMouseLeave={e => {
+                  e.currentTarget.style.background = 'transparent';
+                  e.currentTarget.style.color = '#B8C5D3';
+                }}
+              >
+                📍 {city}
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Price Range */}
-      <div className="space-y-1.5">
-        <label className="text-[13px] font-medium text-[#7A94AA] ml-1">Price Range</label>
-        <div className="flex gap-2">
-          <div className="relative group flex-1">
-            <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 text-[#5A7A94] group-focus-within:text-[#C9A84C] transition-colors w-3.5 h-3.5" />
-            <input
-              type="number"
-              name="minPrice"
-              placeholder="Min"
-              value={filters.minPrice}
-              onChange={handleInputChange}
-              className="w-full pl-8 pr-3 py-3 bg-[#0F1C2E] border border-[#2E4A63] rounded-xl text-[#EDF2F7] placeholder-[#3D5A73] focus:border-[#C9A84C] outline-none transition-all text-sm"
-            />
-          </div>
-          <div className="relative group flex-1">
-            <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 text-[#5A7A94] group-focus-within:text-[#C9A84C] transition-colors w-3.5 h-3.5" />
-            <input
-              type="number"
-              name="maxPrice"
-              placeholder="Max"
-              value={filters.maxPrice}
-              onChange={handleInputChange}
-              className="w-full pl-8 pr-3 py-3 bg-[#0F1C2E] border border-[#2E4A63] rounded-xl text-[#EDF2F7] placeholder-[#3D5A73] focus:border-[#C9A84C] outline-none transition-all text-sm"
-            />
-          </div>
+      <div>
+        <label style={{ color: '#7A94AA', fontSize: '12px', display: 'block', marginBottom: '6px' }}>
+          Price Range (PKR)
+        </label>
+
+        {/* Quick preset buttons */}
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginBottom: '10px' }}>
+          {PRICE_PRESETS.map((preset) => {
+            const isActive = inputValues.minPrice === preset.min && inputValues.maxPrice === preset.max;
+            return (
+              <button
+                key={preset.label}
+                type="button"
+                onClick={() => {
+                  setInputValues(prev => ({ ...prev, minPrice: preset.min, maxPrice: preset.max }));
+                  setFilters(prev => ({ ...prev, minPrice: preset.min, maxPrice: preset.max }));
+                }}
+                style={{
+                  padding: '4px 10px',
+                  fontSize: '11px',
+                  borderRadius: '20px',
+                  border: isActive ? '1px solid #C9A84C' : '1px solid #2E4A63',
+                  background: isActive ? 'rgba(201,168,76,0.12)' : 'transparent',
+                  color: isActive ? '#C9A84C' : '#7A94AA',
+                  cursor: 'pointer',
+                  transition: 'all 0.15s',
+                }}
+              >
+                {preset.label}
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Manual min/max inputs */}
+        <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+          <input
+            type="number"
+            min="0"
+            placeholder="Min"
+            value={inputValues.minPrice}
+            onChange={(e) => setInputValues(prev => ({ ...prev, minPrice: e.target.value }))}
+            style={{
+              width: '100%',
+              background: '#0F1C2E',
+              border: '1px solid #2E4A63',
+              borderRadius: '7px',
+              padding: '8px 12px',
+              color: '#EDF2F7',
+              fontSize: '13px',
+              outline: 'none',
+            }}
+            onFocus={e => e.target.style.borderColor = '#C9A84C'}
+            onBlur={e => e.target.style.borderColor = '#2E4A63'}
+          />
+          <span style={{ color: '#5A7A94', flexShrink: 0 }}>—</span>
+          <input
+            type="number"
+            min="0"
+            placeholder="Max"
+            value={inputValues.maxPrice}
+            onChange={(e) => setInputValues(prev => ({ ...prev, maxPrice: e.target.value }))}
+            style={{
+              width: '100%',
+              background: '#0F1C2E',
+              border: '1px solid #2E4A63',
+              borderRadius: '7px',
+              padding: '8px 12px',
+              color: '#EDF2F7',
+              fontSize: '13px',
+              outline: 'none',
+            }}
+            onFocus={e => e.target.style.borderColor = '#C9A84C'}
+            onBlur={e => e.target.style.borderColor = '#2E4A63'}
+          />
         </div>
       </div>
 
@@ -229,8 +394,8 @@ const FilterBar: React.FC<FilterBarProps> = ({ onFilterChange, totalResults }) =
               type="text"
               name="search"
               placeholder="Search events by title or description..."
-              value={filters.search}
-              onChange={handleInputChange}
+              value={inputValues.search}
+              onChange={(e) => setInputValues(prev => ({ ...prev, search: e.target.value }))}
               className="w-full pl-14 pr-6 py-4 bg-[#0F1C2E] border border-[#2E4A63] rounded-2xl text-[#EDF2F7] placeholder-[#3D5A73] focus:border-[#C9A84C] outline-none transition-all text-lg"
             />
           </div>
