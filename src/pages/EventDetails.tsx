@@ -1,10 +1,10 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Calendar, MapPin, Users, ShieldCheck, ArrowLeft, Loader2, Share2, Facebook, Twitter, Linkedin, Slash, Check, Clock, AlertCircle } from 'lucide-react';
+import { Calendar, MapPin, Users, ShieldCheck, ArrowLeft, Loader2, Share2, Facebook, Twitter, Linkedin, Slash, Check, Clock } from 'lucide-react';
 import CancelEventModal from '../components/CancelEventModal';
 import { getEventById, EventData, approveEvent } from '../api/eventApi';
-import { joinWaitlist, leaveWaitlist, getWaitlistPosition } from '../api/waitlistApi';
+import { getWaitlistPosition } from '../api/waitlistApi';
 import CheckoutButton from '../components/bookings/CheckoutButton';
 import AnnouncementModal from '../components/AnnouncementModal';
 import { useRealTime } from '../hooks/useRealTime';
@@ -21,7 +21,6 @@ const EventDetails: React.FC = () => {
   const [event, setEvent] = useState<EventData | null>(null);
   const [loading, setLoading] = useState(true);
   const [waitlistInfo, setWaitlistInfo] = useState<{ position: number | null, status: string | null, expiresAt: string | null } | null>(null);
-  const [joiningWaitlist, setJoiningWaitlist] = useState(false);
   const [quantity, setQuantity] = useState(1);
   const [hasTicket, setHasTicket] = useState(false);
   const [isAnnouncementOpen, setIsAnnouncementOpen] = useState(false);

@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { Search, X, Calendar, MapPin, DollarSign, SortAsc, SlidersHorizontal, ChevronDown } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Search, X, Calendar, SortAsc, SlidersHorizontal, ChevronDown } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 interface FilterBarProps {

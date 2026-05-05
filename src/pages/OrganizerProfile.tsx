@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Loader2, Star, Users, Calendar, ArrowLeft, ShieldCheck } from 'lucide-react';
+import { Loader2, Star, Calendar, ArrowLeft, ShieldCheck } from 'lucide-react';
 import api from '../api/axios';
 import { getOrganizerReviews, Review } from '../api/reviewApi';
 import StarRating from '../components/reviews/StarRating';

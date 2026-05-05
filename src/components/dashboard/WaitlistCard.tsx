@@ -1,5 +1,4 @@
 import React from 'react';
-import { motion } from 'framer-motion';
 import { Calendar, MapPin, Clock, XCircle, AlertCircle, CheckCircle, ArrowRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
@@ -23,7 +22,6 @@ interface WaitlistCardProps {
 
 const WaitlistCard: React.FC<WaitlistCardProps> = ({ entry, onLeave }) => {
   const isNotified = entry.status === 'notified';
-  const isExpired = entry.status === 'expired';
   const isWaiting = entry.status === 'waiting';
 
   const getStatusConfig = () => {
